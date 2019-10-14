@@ -3,15 +3,12 @@ package com.zylex.myscoreparser;
 import com.zylex.myscoreparser.model.Coeffitient;
 import com.zylex.myscoreparser.model.Record;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class Saver {
 
@@ -24,9 +21,9 @@ public class Saver {
     private final String[] bookmakers = {"1XBET", "Winline", "Leon"};
 
     public void processSaving(List<Record> records, String league) throws IOException, ParseException {
-        File file = new File(league.replace("/", "_") + ".txt");
+        File file = new File(league.replace("/", "_") + ".csv");
         file.createNewFile();
-        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
         for (Record record : records) {
             String line = String.format(RECORD_BODY_FORMAT,
                     record.getCountry(),
@@ -41,9 +38,9 @@ public class Saver {
                 if (coeffitients.containsKey(bookmaker)) {
                     Coeffitient coef = coeffitients.get(bookmaker);
                     line += String.format(COEFFITIENT_FORMAT,
-                            coef.getFirstWin(),
-                            coef.getTie(),
-                            coef.getSecondWin());
+                            coef.getFirstWin().replace(".", ","),
+                            coef.getTie().replace(".", ","),
+                            coef.getSecondWin().replace(".", ","));
                 } else {
                     line += ";-";
                 }

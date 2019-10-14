@@ -26,9 +26,11 @@ public class Parser {
 
     private String year;
 
+    private int damagedFiles = 0;
+
     public Parser(WebDriver driver) {
         this.driver = driver;
-        wait = new WebDriverWait(driver, 15);
+        wait = new WebDriverWait(driver, 10);
     }
 
     public List<Record> leagueParser(String leagueHref, String year) throws InterruptedException {
@@ -63,6 +65,7 @@ public class Parser {
                 System.out.println(++i + ") Отсутствуют значения коэффициентов : " + record);
             }
         }
+        System.out.println("Количество записей с непрочитанными коэффициентами: " + damagedFiles);
         return records;
     }
 
@@ -71,6 +74,7 @@ public class Parser {
         try {
             wait.until(ExpectedConditions.presenceOfElementLocated(By.id("odds_1x2")));
         } catch (TimeoutException e) {
+            damagedFiles++;
             return false;
         }
         String pageSourse = driver.getPageSource();
