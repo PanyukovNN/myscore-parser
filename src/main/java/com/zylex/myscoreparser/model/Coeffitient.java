@@ -17,6 +17,22 @@ public class Coeffitient {
         this.secondWin = secondWin;
     }
 
+    public String getBookmaker() {
+        return bookmaker;
+    }
+
+    public String getFirstWin() {
+        return firstWin;
+    }
+
+    public String getTie() {
+        return Tie;
+    }
+
+    public String getSecondWin() {
+        return secondWin;
+    }
+
     @Override
     public String toString() {
         return "Coeffitient{" +

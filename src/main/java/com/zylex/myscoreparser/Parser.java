@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Parser {
 
@@ -25,14 +26,14 @@ public class Parser {
 
     private String year;
 
-    public Parser(WebDriver driver, String year) {
+    public Parser(WebDriver driver) {
         this.driver = driver;
-        this.year = year;
-        wait = new WebDriverWait(driver, 30);
+        wait = new WebDriverWait(driver, 15);
     }
 
-    public List<Record> leagueParser(String leagueHref) throws InterruptedException {
-        driver.navigate().to(String.format("https://www.myscore.ru/football/england/%s/results/", leagueHref));
+    public List<Record> leagueParser(String leagueHref, String year) throws InterruptedException {
+        this.year = year;
+        driver.navigate().to(String.format("https://www.myscore.ru/football/%s/results/", leagueHref));
         showMore(driver);
         String pageSourse = driver.getPageSource();
         Document document = Jsoup.parse(pageSourse);
@@ -54,34 +55,50 @@ public class Parser {
             int secondBalls = Integer.parseInt(scores[1]);
             String coefHref = gameRecord.id().replace("g_1_", "");
             Record record = new Record(country, league, gameDateTime, firstCommand, secondCommand, firstBalls, secondBalls, coefHref);
-            coefParser(record);
-            records.add(record);
-            System.out.println(++i + ") " + record);
+            if (coefParser(record)) {
+                records.add(record);
+                System.out.println(++i + ") " + record);
+            } else {
+                records.add(record);
+                System.out.println(++i + ") Отсутствуют значения коэффициентов : " + record);
+            }
         }
         return records;
     }
 
-    public void coefParser(Record record) {
+    public boolean coefParser(Record record) {
         driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#odds-comparison;1x2-odds;full-time", record.getCoefHref()));
         try {
             wait.until(ExpectedConditions.presenceOfElementLocated(By.id("odds_1x2")));
         } catch (TimeoutException e) {
-            e.printStackTrace();
+            return false;
         }
         String pageSourse = driver.getPageSource();
         Document doc = Jsoup.parse(pageSourse);
-        Elements coefRecords = doc.select("tbody > tr");
+        Element coefTable = doc.select("table#odds_1x2").first();
+        Elements coefRecords = coefTable.select("tbody > tr");
         parseCoefficients(record, coefRecords);
+        return true;
     }
 
     private static void showMore(WebDriver driver) throws InterruptedException {
-        WebElement showMore = driver.findElement(By.className("event__more"));
-        while (showMore != null) {
+        WebElement showLink = null;
+        try {
+            showLink = driver.findElement(By.className("event__more"));
+        } catch (NoSuchElementException e) {
+            return;
+        }
+        Thread.sleep(2000);
+        while (true) {
             try {
-                showMore.click();
-                showMore = driver.findElement(By.className("event__more"));
+                if (showLink.isDisplayed()) {
+                    showLink.click();
+                    showLink = driver.findElement(By.className("event__more"));
+                }
             } catch (StaleElementReferenceException e) {
                 break;
+            } catch (ElementClickInterceptedException e) {
+                System.out.println("Не могу кликнуть!");
             }
             Thread.sleep(2000);
         }
@@ -100,17 +117,13 @@ public class Parser {
     }
 
     private void parseCoefficients(Record record, Elements coefRecords) {
-        List<Coeffitient> coeffitients = record.getCoeffitients();
-        int i = 0;
+        Map<String, Coeffitient> coeffitients = record.getCoeffitients();
         for (Element element : coefRecords) {
             String bookmaker = element.select("td.bookmaker > div > a").first().attr("title");
             if (checkBookmaker(bookmaker)) {
                 String[] allCoef = element.select("td.kx > span").text().split(" ");
                 Coeffitient coeffitient = new Coeffitient(fixBookmakerName(bookmaker), allCoef[0], allCoef[1], allCoef[2]);
-                coeffitients.add(coeffitient);
-            }
-            if (i++ == 3) {
-                break;
+                coeffitients.putIfAbsent(fixBookmakerName(bookmaker), coeffitient);
             }
         }
     }

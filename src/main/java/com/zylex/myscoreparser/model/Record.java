@@ -1,8 +1,7 @@
 package com.zylex.myscoreparser.model;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Record {
 
@@ -22,7 +21,7 @@ public class Record {
 
     private String coefHref;
 
-    private List<Coeffitient> coeffitients = new ArrayList<>();
+    private Map<String, Coeffitient> coeffitients = new HashMap<>();
 
     public Record(String country, String leagueName, LocalDateTime gameDate, String firstCommand, String secondCommand, int firstBalls, int secondBalls, String coefHref) {
         this.country = country;
@@ -67,7 +66,7 @@ public class Record {
         return coefHref;
     }
 
-    public List<Coeffitient> getCoeffitients() {
+    public Map<String, Coeffitient> getCoeffitients() {
         return coeffitients;
     }
 
