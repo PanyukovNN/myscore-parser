@@ -9,6 +9,8 @@ public class Record {
 
     private String leagueName;
 
+    private String season;
+
     private LocalDateTime gameDate;
 
     private String firstCommand;
@@ -23,9 +25,10 @@ public class Record {
 
     private Map<String, Coeffitient> coeffitients = new HashMap<>();
 
-    public Record(String country, String leagueName, LocalDateTime gameDate, String firstCommand, String secondCommand, int firstBalls, int secondBalls, String coefHref) {
+    public Record(String country, String leagueName, String season, LocalDateTime gameDate, String firstCommand, String secondCommand, int firstBalls, int secondBalls, String coefHref) {
         this.country = country;
         this.leagueName = leagueName;
+        this.season = season;
         this.gameDate = gameDate;
         this.firstCommand = firstCommand;
         this.secondCommand = secondCommand;
@@ -40,6 +43,10 @@ public class Record {
 
     public String getLeagueName() {
         return leagueName;
+    }
+
+    public String getSeason() {
+        return season;
     }
 
     public LocalDateTime getGameDate() {
@@ -75,6 +82,7 @@ public class Record {
         return "Record{" +
                 "country='" + country + '\'' +
                 ", leagueName='" + leagueName + '\'' +
+                ", season='" + season + '\'' +
                 ", gameDate=" + gameDate +
                 ", firstCommand='" + firstCommand + '\'' +
                 ", secondCommand='" + secondCommand + '\'' +
