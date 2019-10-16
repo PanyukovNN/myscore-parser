@@ -1,6 +1,6 @@
-package com.zylex.myscoreparser.processor;
+package com.zylex.myscoreparser;
 
-import com.zylex.myscoreparser.model.Coeffitient;
+import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Record;
 
 import java.io.*;
@@ -11,10 +11,6 @@ import java.util.Map;
 
 public class Saver {
 
-    private final String RECORD_BODY_FORMAT = "%s;%s;%s;%s;%s;%d;%d";
-
-    private final String COEFFITIENT_FORMAT = ";%s;%s;%s";
-
     private final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd;HH:mm");
 
     private final String[] bookmakers = {"1XBET", "Winline", "Leon"};
@@ -22,41 +18,49 @@ public class Saver {
     public void processSaving(List<Record> records, String leagueHref) throws IOException {
         String fileName = processFileName(records.get(0).getSeason(), leagueHref);
         File file = new File("results/" + fileName + ".csv");
-        file.createNewFile();
-        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
+        if (file.createNewFile()) {
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
+            writeToFile(records, writer);
+            writer.close();
+        }
+    }
+
+    private void writeToFile(List<Record> records, BufferedWriter writer) throws IOException {
+        final String RECORD_BODY_FORMAT = "%s;%s;%s;%s;%s;%d;%d";
+        final String COEFFICIENT_FORMAT = ";%s;%s;%s";
         for (Record record : records) {
-            String line = String.format(RECORD_BODY_FORMAT,
+            StringBuilder line = new StringBuilder(String.format(RECORD_BODY_FORMAT,
                     record.getCountry(),
                     record.getLeagueName(),
                     DATE_FORMATTER.format(record.getGameDate()),
                     record.getFirstCommand(),
                     record.getSecondCommand(),
                     record.getFirstBalls(),
-                    record.getSecondBalls());
-            Map<String, Coeffitient> coeffitients = record.getCoeffitients();
+                    record.getSecondBalls()));
+            Map<String, Coefficient> coeffitients = record.getCoefficients();
             for (String bookmaker : bookmakers) {
                 if (coeffitients.containsKey(bookmaker)) {
-                    Coeffitient coef = coeffitients.get(bookmaker);
-                    line += String.format(COEFFITIENT_FORMAT,
+                    Coefficient coef = coeffitients.get(bookmaker);
+                    line.append(String.format(COEFFICIENT_FORMAT,
                             coef.getFirstWin().replace(".", ","),
                             coef.getTie().replace(".", ","),
-                            coef.getSecondWin().replace(".", ","));
+                            coef.getSecondWin().replace(".", ",")));
                 } else {
-                    line += ";-";
+                    line.append(";-");
                 }
             }
-            line += "\n";
-            writer.write(line);
+            line.append("\n");
+            writer.write(line.toString());
         }
-        writer.flush();
-        writer.close();
     }
 
     private String processFileName(String season, String leagueHref) {
-        String fileName = leagueHref;
-        if (season.equals("2019") || season.equals("2019/2020")) {
-            fileName += season.replace("/", "-");
+        String fileName = leagueHref
+                .substring(0, leagueHref.length() - 1)
+                .replace("/", "-");
+        if (season.substring(0, 4).equals("2019")) {
+            fileName += "-" + season.replace("/", "-");
         }
-        return fileName.replace("/", "_");
+        return fileName;
     }
 }

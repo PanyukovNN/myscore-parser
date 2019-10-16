@@ -1,11 +1,9 @@
 package com.zylex.myscoreparser;
 
-import com.zylex.myscoreparser.processor.ConnectionProcessor;
-import com.zylex.myscoreparser.processor.ParseArchive;
+import com.zylex.myscoreparser.repository.Repository;
+import com.zylex.myscoreparser.tasks.ConnectionProcessor;
 
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
@@ -14,33 +12,17 @@ public class Main {
 
     public static AtomicInteger totalRecords = new AtomicInteger(0);
 
-    public static void main(String[] args) throws InterruptedException {
-        long startTime = System.currentTimeMillis();
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
         System.setProperty("webdriver.chrome.driver", "C:\\java\\external-files\\chromedriver.exe");
-        String[] countryLeagues = {"australia/a-league",
-                "austria/tipico-bundesliga",
-                "austria/2-liga",
-                "azerbaijan/premier-league",
-                "algeria/division-1",
-                "england/championship",
-                "argentina/superliga",
-                "argentina/primera-nacional",
-                "armenia/premier-league",
-                "bahrain/premier-league",
-                "belarus/vysshaya-liga",
-                "belgium/jupiler-league",
-                "belgium/proximus-league"};
-        Map<String, List<String>> archive = ParseArchive.processArchive(countryLeagues);
-        ExecutorService service = Executors.newFixedThreadPool(6);
-        List<ConnectionProcessor> futureList = new ArrayList<>();
-        for (String countryLeague : countryLeagues) {
-            for (String leagueHref : archive.get(countryLeague)) {
-                futureList.add(new ConnectionProcessor(leagueHref));
-            }
+        long startTime = System.currentTimeMillis();
+        try {
+            Repository repository = Repository.getInstanse();
+            String[] countryLeagues = repository.getCountryLeagues();
+            ConnectionProcessor connectionProcessor = new ConnectionProcessor(countryLeagues);
+            connectionProcessor.processParsers();
+        } finally {
+            summarizing(startTime);
         }
-        service.invokeAll(futureList);
-        service.shutdown();
-        summarizing(startTime);
     }
 
     private static void summarizing(long startTime) {

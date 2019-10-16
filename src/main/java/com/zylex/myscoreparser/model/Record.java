@@ -23,7 +23,7 @@ public class Record {
 
     private String coefHref;
 
-    private Map<String, Coeffitient> coeffitients = new HashMap<>();
+    private Map<String, Coefficient> coefficients = new HashMap<>();
 
     public Record(String country, String leagueName, String season, LocalDateTime gameDate, String firstCommand, String secondCommand, int firstBalls, int secondBalls, String coefHref) {
         this.country = country;
@@ -35,6 +35,10 @@ public class Record {
         this.firstBalls = firstBalls;
         this.secondBalls = secondBalls;
         this.coefHref = coefHref;
+    }
+
+    public Record(String season) {
+        this.season = season;
     }
 
     public String getCountry() {
@@ -73,8 +77,8 @@ public class Record {
         return coefHref;
     }
 
-    public Map<String, Coeffitient> getCoeffitients() {
-        return coeffitients;
+    public Map<String, Coefficient> getCoefficients() {
+        return coefficients;
     }
 
     @Override
@@ -89,7 +93,7 @@ public class Record {
                 ", firstBalls=" + firstBalls +
                 ", secondBalls=" + secondBalls +
                 ", coefHref='" + coefHref + '\'' +
-                ", \tcoeffitients=" + coeffitients +
+                ", \tcoeffitients=" + coefficients +
                 '}';
     }
 }

@@ -1,19 +1,19 @@
 package com.zylex.myscoreparser.model;
 
-public class Coeffitient {
+public class Coefficient {
 
     private String bookmaker;
 
     private String firstWin;
 
-    private String Tie;
+    private String tie;
 
     private String secondWin;
 
-    public Coeffitient(String bookmaker, String firstWin, String tie, String secondWin) {
+    public Coefficient(String bookmaker, String firstWin, String tie, String secondWin) {
         this.bookmaker = bookmaker;
         this.firstWin = firstWin;
-        Tie = tie;
+        this.tie = tie;
         this.secondWin = secondWin;
     }
 
@@ -26,7 +26,7 @@ public class Coeffitient {
     }
 
     public String getTie() {
-        return Tie;
+        return tie;
     }
 
     public String getSecondWin() {
@@ -38,7 +38,7 @@ public class Coeffitient {
         return "Coeffitient{" +
                 "bookmaker='" + bookmaker + '\'' +
                 ", firstWin='" + firstWin + '\'' +
-                ", Tie='" + Tie + '\'' +
+                ", tie='" + tie + '\'' +
                 ", secondWin='" + secondWin + '\'' +
                 '}';
     }
