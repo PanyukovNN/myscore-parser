@@ -37,10 +37,6 @@ public class Record {
         this.coefHref = coefHref;
     }
 
-    public Record(String season) {
-        this.season = season;
-    }
-
     public String getCountry() {
         return country;
     }

@@ -1,7 +1,7 @@
 package com.zylex.myscoreparser;
 
 import com.zylex.myscoreparser.repository.Repository;
-import com.zylex.myscoreparser.tasks.ConnectionProcessor;
+import com.zylex.myscoreparser.service.ParseProcessor;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,10 +16,9 @@ public class Main {
         System.setProperty("webdriver.chrome.driver", "C:\\java\\external-files\\chromedriver.exe");
         long startTime = System.currentTimeMillis();
         try {
-            Repository repository = Repository.getInstanse();
-            String[] countryLeagues = repository.getCountryLeagues();
-            ConnectionProcessor connectionProcessor = new ConnectionProcessor(countryLeagues);
-            connectionProcessor.processParsers();
+            Repository repository = Repository.getInstance();
+            ParseProcessor parseProcessor = new ParseProcessor(repository);
+            parseProcessor.process();
         } finally {
             summarizing(startTime);
         }

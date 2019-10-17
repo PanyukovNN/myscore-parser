@@ -1,33 +1,57 @@
 package com.zylex.myscoreparser.service;
 
+import com.zylex.myscoreparser.DriverFactory;
+import com.zylex.myscoreparser.Main;
+import com.zylex.myscoreparser.model.RecordsLink;
 import com.zylex.myscoreparser.model.Record;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.*;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
-public class LeagueParser {
+public class CallableLeagueParser implements Callable<RecordsLink> {
 
-    private WebDriver driver;
+    private String leagueLink;
 
-    private final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+    private WebDriver driver = null;
 
     private WebDriverWait wait;
 
-    public LeagueParser(WebDriver driver) {
-        this.driver = driver;
+    private final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+    CallableLeagueParser(String leagueLink) {
+        this.leagueLink = leagueLink;
+    }
+
+    public RecordsLink call() throws InterruptedException {
+        try {
+            getDriver();
+            driver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
+            List<Record> records = processLeagueParsing(leagueLink);
+            return new RecordsLink(leagueLink, records);
+        } finally {
+            DriverFactory.drivers.add(driver);
+        }
+    }
+
+    private void getDriver() throws InterruptedException {
+        while (driver == null) {
+            driver = DriverFactory.drivers.poll();
+            Thread.sleep(10);
+        }
         wait = new WebDriverWait(driver, 30);
     }
 
-    public List<Record> processLeagueParsing(String leagueHref) throws InterruptedException {
+    private List<Record> processLeagueParsing(String leagueHref) throws InterruptedException {
         driver.navigate().to(String.format("https://www.myscore.ru/football/%sresults/", leagueHref));
         showMore(driver);
         String pageSource = driver.getPageSource();
@@ -54,19 +78,21 @@ public class LeagueParser {
             Record record = new Record(country, league, season, gameDateTime, firstCommand, secondCommand, firstBalls, secondBalls, coefHref);
             records.add(record);
         }
+        Main.totalRecords.addAndGet(records.size());
         return records;
     }
 
     private void showMore(WebDriver driver) throws InterruptedException {
-        WebElement showLink;
         while (true) {
             try {
-                Thread.sleep(1500);
-                showLink = driver.findElement(By.className("event__more"));
-                showLink.click();
-            } catch (NoSuchElementException e) {
-                break;
-            } catch (ElementClickInterceptedException e) {
+                wait.until(webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+                Thread.sleep(1000);
+                if (driver.findElements(By.className("event__more")).size() > 0) {
+                    driver.findElement(By.className("event__more")).click();
+                } else {
+                    break;
+                }
+            } catch (StaleElementReferenceException | ElementClickInterceptedException e) {
                 System.out.println("Can't click, trying again...");
             }
         }
