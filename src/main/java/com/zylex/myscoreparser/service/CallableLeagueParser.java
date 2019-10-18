@@ -2,6 +2,7 @@ package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.DriverFactory;
 import com.zylex.myscoreparser.Main;
+import com.zylex.myscoreparser.exceptions.LeagueParserException;
 import com.zylex.myscoreparser.model.RecordsLink;
 import com.zylex.myscoreparser.model.Record;
 import org.jsoup.Jsoup;
@@ -32,12 +33,14 @@ public class CallableLeagueParser implements Callable<RecordsLink> {
         this.leagueLink = leagueLink;
     }
 
-    public RecordsLink call() throws InterruptedException {
+    public RecordsLink call() {
         try {
             getDriver();
             driver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
             List<Record> records = processLeagueParsing(leagueLink);
             return new RecordsLink(leagueLink, records);
+        } catch (InterruptedException e) {
+            throw new LeagueParserException(e.getMessage(), e);
         } finally {
             DriverFactory.drivers.add(driver);
         }
@@ -63,8 +66,8 @@ public class CallableLeagueParser implements Callable<RecordsLink> {
         List<Record> records = new ArrayList<>();
         Elements gameRecords = document.select("div.event__match");
         String country = document.select("span.event__title--type").first().text();
-        String league = document.select("span.event__title--name").first().text();
-        String season = document.select("div.teamHeader__text").first().text();
+        String league = document.select("div.teamHeader__name").first().text();
+        String season = document.select("div.teamHeader__text").first().text().replace("/", "");
         int seasonStartMonth = findSeasonStartMonth(gameRecords.last());
         for (Element gameRecord : gameRecords) {
             String seasonStartYear = season.substring(0, 4);

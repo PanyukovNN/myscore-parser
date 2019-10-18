@@ -1,6 +1,7 @@
 package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.DriverFactory;
+import com.zylex.myscoreparser.exceptions.ParseProcessorException;
 import com.zylex.myscoreparser.model.RecordsLink;
 import com.zylex.myscoreparser.repository.Repository;
 
@@ -21,12 +22,14 @@ public class ParseProcessor {
         this.countryLeagues = repository.getCountryLeagues();
     }
 
-    public void process() throws InterruptedException, ExecutionException {
+    public void process() {
         try {
             List<String> archiveLinks = processArchiveLinks();
             List<RecordsLink> recordsLinks = processRecordsLinks(archiveLinks);
             processCoefficients(recordsLinks);
             service.shutdown();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new ParseProcessorException(e.getMessage(), e);
         } finally {
             DriverFactory.quitDrivers();
         }

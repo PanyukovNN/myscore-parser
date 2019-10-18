@@ -43,6 +43,15 @@
             <artifactId>jetty-client</artifactId>
             <version>9.4.0.M1</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.codeborne/phantomjsdriver -->
+        <dependency>
+            <groupId>com.codeborne</groupId>
+            <artifactId>phantomjsdriver</artifactId>
+            <version>1.4.1</version>
+        </dependency>
+
+
     </dependencies>
 
 </project>
