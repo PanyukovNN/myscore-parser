@@ -16,17 +16,16 @@ public class Repository {
 
     private String[] countryLeagues = {
 //            "austria/tipico-bundesliga",
-//            "australia/a-league",
+            "australia/a-league",
 //            "england/premier-league",
 //            "england/championship",
 //            "argentina/superliga",
 //            "belarus/vysshaya-liga",
 //            "belgium/jupiler-league",
 //            "bulgaria/parva-liga",
-            "brazil/serie-a",
+//            "brazil/serie-a",
 //            "brazil/serie-b",
     };
-
 
     public String[] getCountryLeagues() {
         return countryLeagues;

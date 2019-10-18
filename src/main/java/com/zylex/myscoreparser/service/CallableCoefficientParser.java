@@ -5,7 +5,6 @@ import com.zylex.myscoreparser.Main;
 import com.zylex.myscoreparser.exceptions.CoefficientParserException;
 import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Record;
-import com.zylex.myscoreparser.Saver;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -21,7 +20,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-public class CallableCoefficientParser implements Callable<Void> {
+public class CallableCoefficientParser implements Callable<List<Record>> {
 
     private WebDriver driver;
 
@@ -29,30 +28,27 @@ public class CallableCoefficientParser implements Callable<Void> {
 
     private List<Record> records;
 
-    private String leagueLink;
-
     private int playOffRecords = 0;
 
     private int noCoefficientRecords = 0;
 
-    CallableCoefficientParser(String leagueLink, List<Record> records) {
-        this.leagueLink = leagueLink;
+    CallableCoefficientParser(List<Record> records) {
         this.records = records;
     }
 
-    public Void call() {
+    public List<Record> call() {
         try {
             getDriver();
             driver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
             processCoefficientParsing(records);
-            Saver saver = new Saver();
-            saver.processSaving(records, leagueLink);
+            return records;
         } catch (InterruptedException e) {
             throw new CoefficientParserException(e.getMessage(), e);
         } finally {
             DriverFactory.drivers.add(driver);
+            Main.totalPlayOffRecords.addAndGet(playOffRecords);
+            Main.totalWithNoCoef.addAndGet(noCoefficientRecords);
         }
-        return null;
     }
 
     private void getDriver() throws InterruptedException {
@@ -80,9 +76,13 @@ public class CallableCoefficientParser implements Callable<Void> {
             parseCoefficients(record, document);
             System.out.println(i++ + ") " + record);
         }
-        System.out.println("Finished: " + leagueLink + "\nRecords without coefficients: " + noCoefficientRecords);
-        Main.totalPlayOffRecords.addAndGet(playOffRecords);
-        Main.totalWithNoCoef.addAndGet(noCoefficientRecords);
+        Record tempRecord = records.get(0);
+        System.out.printf("Finished: %s_%s_%s \nRecords number: %d \nRecords without coefficients: %d\n",
+                tempRecord.getCountry(),
+                tempRecord.getLeagueName(),
+                tempRecord.getSeason(),
+                records.size(),
+                noCoefficientRecords);
     }
 
     private boolean coefficientTableExists() {

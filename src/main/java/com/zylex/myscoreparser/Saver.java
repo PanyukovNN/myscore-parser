@@ -16,10 +16,9 @@ public class Saver {
 
     private final String[] bookmakers = {"1XBET", "Winline", "Leon"};
 
-    public void processSaving(List<Record> records, String leagueHref) {
+    public void processSaving(List<Record> records) {
         try {
-            String fileName = processFileName(records.get(0).getSeason(), leagueHref);
-            File file = new File("results/" + fileName + ".csv");
+            File file = new File("results/results.csv");
             if (file.createNewFile()) {
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
                 writeToFile(records, writer);
@@ -65,20 +64,6 @@ public class Saver {
             line.append("\n");
             writer.write(line.toString());
         }
-    }
-
-    private String processFileName(String season, String leagueHref) {
-        String fileName = leagueHref
-                .substring(0, leagueHref.length() - 1)
-                .replace("/", "-");
-        if (season.substring(0, 4).equals("2019")) {
-            if (season.equals("2019")) {
-                fileName += "-" + season.substring(0, 4);
-            } else {
-                fileName += "-" + season.substring(0, 4) + "-" + season.substring(4);
-            }
-        }
-        return fileName;
     }
 
     private boolean doesCoefficientExist(Record record) {

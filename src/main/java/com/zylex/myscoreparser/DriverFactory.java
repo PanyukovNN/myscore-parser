@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class DriverFactory {
 
-    public static final int THREADS = 3;
+    public static final int THREADS = 10;
 
     public static Queue<WebDriver> drivers = new ConcurrentLinkedQueue<>();
 
