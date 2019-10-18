@@ -69,7 +69,7 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
             }
             String pageSourse = driver.getPageSource();
             Document document = Jsoup.parse(pageSourse);
-            if (isPlayOff(record, document)) {
+            if (isPlayOff(document)) {
                 System.out.println(i++ + ") Play-off record: " + record);
                 continue;
             }
@@ -77,12 +77,13 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
             System.out.println(i++ + ") " + record);
         }
         Record tempRecord = records.get(0);
-        System.out.printf("Finished: %s_%s_%s \nRecords number: %d \nRecords without coefficients: %d\n",
+        System.out.printf("Finished: %s_%s_%s \nRecords number: %d \nRecords without coefficients: %d\n Play-off records: %d\n",
                 tempRecord.getCountry(),
                 tempRecord.getLeagueName(),
                 tempRecord.getSeason(),
                 records.size(),
-                noCoefficientRecords);
+                noCoefficientRecords,
+                playOffRecords);
     }
 
     private boolean coefficientTableExists() {
@@ -99,7 +100,7 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
         return true;
     }
 
-    private boolean isPlayOff(Record record, Document document) {
+    private boolean isPlayOff(Document document) {
         String league = document.select("span.description__country > a").text();
         if (!league.contains("Тур")) {
             playOffRecords++;

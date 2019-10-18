@@ -3,7 +3,6 @@ package com.zylex.myscoreparser.service;
 import com.zylex.myscoreparser.DriverFactory;
 import com.zylex.myscoreparser.Main;
 import com.zylex.myscoreparser.exceptions.LeagueParserException;
-import com.zylex.myscoreparser.model.RecordsLink;
 import com.zylex.myscoreparser.model.Record;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -19,7 +18,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-public class CallableLeagueParser implements Callable<RecordsLink> {
+public class CallableLeagueParser implements Callable<List<Record>> {
 
     private String leagueLink;
 
@@ -33,12 +32,11 @@ public class CallableLeagueParser implements Callable<RecordsLink> {
         this.leagueLink = leagueLink;
     }
 
-    public RecordsLink call() {
+    public List<Record> call() {
         try {
             getDriver();
             driver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
-            List<Record> records = processLeagueParsing(leagueLink);
-            return new RecordsLink(leagueLink, records);
+            return processLeagueParsing(leagueLink);
         } catch (InterruptedException e) {
             throw new LeagueParserException(e.getMessage(), e);
         } finally {
@@ -54,8 +52,8 @@ public class CallableLeagueParser implements Callable<RecordsLink> {
         wait = new WebDriverWait(driver, 30);
     }
 
-    private List<Record> processLeagueParsing(String leagueHref) throws InterruptedException {
-        driver.navigate().to(String.format("https://www.myscore.ru/football/%sresults/", leagueHref));
+    private List<Record> processLeagueParsing(String leagueLink) throws InterruptedException {
+        driver.navigate().to(String.format("https://www.myscore.ru/football/%sresults/", leagueLink));
         showMore(driver);
         String pageSource = driver.getPageSource();
         Document document = Jsoup.parse(pageSource);

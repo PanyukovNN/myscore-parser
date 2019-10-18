@@ -1,10 +1,8 @@
 package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.DriverFactory;
-import com.zylex.myscoreparser.Saver;
 import com.zylex.myscoreparser.exceptions.ParseProcessorException;
 import com.zylex.myscoreparser.model.Record;
-import com.zylex.myscoreparser.model.RecordsLink;
 import com.zylex.myscoreparser.repository.Repository;
 
 import java.util.*;
@@ -24,13 +22,11 @@ public class ParseProcessor {
         this.countryLeagues = repository.getCountryLeagues();
     }
 
-    public void process() {
+    public List<Record> process() {
         try {
             List<String> archiveLinks = processArchiveLinks();
-            List<RecordsLink> recordsLinks = processRecordsLinks(archiveLinks);
-            List<Record> records = processCoefficients(recordsLinks);
-            Saver saver = new Saver();
-            saver.processSaving(records);
+            List<List<Record>> leagueRecords = processLeagueRecords(archiveLinks);
+            return processCoefficients(leagueRecords);
         } catch (InterruptedException | ExecutionException e) {
             throw new ParseProcessorException(e.getMessage(), e);
         } finally {
@@ -56,37 +52,36 @@ public class ParseProcessor {
         return archiveLinks;
     }
 
-    private List<RecordsLink> processRecordsLinks(List<String> archiveLinks) throws InterruptedException, ExecutionException {
+    private List<List<Record>> processLeagueRecords(List<String> archiveLinks) throws InterruptedException, ExecutionException {
         List<CallableLeagueParser> callableLeagueParsers = new ArrayList<>();
-        for (String link : archiveLinks) {
-            callableLeagueParsers.add(new CallableLeagueParser(link));
+        for (String archiveLink : archiveLinks) {
+            callableLeagueParsers.add(new CallableLeagueParser(archiveLink));
         }
-        List<Future<RecordsLink>> futureRecordsLinks = service.invokeAll(callableLeagueParsers);
-        List<RecordsLink> recordsLinks = convertFutureLeagueLinks(futureRecordsLinks);
-        Comparator<RecordsLink> sizeComparator = (o1, o2) -> Integer.compare(o2.getRecords().size(), o1.getRecords().size());
-        Comparator<RecordsLink> seasonComparator = Comparator.comparingInt(this::getSeasonStartYear);
+        List<Future<List<Record>>> futureLeagueRecords = service.invokeAll(callableLeagueParsers);
+        List<List<Record>> recordsLinks = convertFutureLeagueRecords(futureLeagueRecords);
+        Comparator<List<Record>> sizeComparator = (o1, o2) -> Integer.compare(o2.size(), o1.size());
+        Comparator<List<Record>> seasonComparator = Comparator.comparingInt(this::getSeasonStartYear);
         return recordsLinks.stream()
                 .sorted(sizeComparator.thenComparing(seasonComparator))
                 .collect(Collectors.toList());
     }
 
-    private List<RecordsLink> convertFutureLeagueLinks(List<Future<RecordsLink>> futureLeagueParsers) throws InterruptedException, ExecutionException {
-        List<RecordsLink> recordsLinks = new ArrayList<>();
-        for (Future<RecordsLink> futureLeagueResult: futureLeagueParsers) {
-            RecordsLink newResult = futureLeagueResult.get();
-            recordsLinks.add(newResult);
+    private List<List<Record>> convertFutureLeagueRecords(List<Future<List<Record>>> futureLeagueRecords) throws InterruptedException, ExecutionException {
+        List<List<Record>> recordsLinks = new ArrayList<>();
+        for (Future<List<Record>> futureLeagueRecord: futureLeagueRecords) {
+            recordsLinks.add(futureLeagueRecord.get());
         }
         return recordsLinks;
     }
 
-    private int getSeasonStartYear(RecordsLink result) {
-        return Integer.parseInt(result.getRecords().get(0).getSeason().substring(0, 4));
+    private int getSeasonStartYear(List<Record> records) {
+        return Integer.parseInt(records.get(0).getSeason().substring(0, 4));
     }
 
-    private List<Record> processCoefficients(List<RecordsLink> recordsList) throws InterruptedException, ExecutionException {
+    private List<Record> processCoefficients(List<List<Record>> recordsList) throws InterruptedException, ExecutionException {
         List<CallableCoefficientParser> callableCoefficientParsers = new ArrayList<>();
-        for (RecordsLink records : recordsList) {
-            callableCoefficientParsers.add(new CallableCoefficientParser(records.getRecords()));
+        for (List<Record> records : recordsList) {
+            callableCoefficientParsers.add(new CallableCoefficientParser(records));
         }
         List<Future<List<Record>>> futureRecordsLists = service.invokeAll(callableCoefficientParsers);
         return processRecords(futureRecordsLists);

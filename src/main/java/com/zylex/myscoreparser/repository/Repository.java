@@ -15,7 +15,7 @@ public class Repository {
     }
 
     private String[] countryLeagues = {
-//            "austria/tipico-bundesliga",
+            "austria/tipico-bundesliga",
             "australia/a-league",
 //            "england/premier-league",
 //            "england/championship",

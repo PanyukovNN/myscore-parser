@@ -25,7 +25,7 @@ public class CallableArchiveParser implements Callable<List<String>> {
         this.countryLeague = countryLeagues;
     }
 
-    public List<String> call() throws InterruptedException {
+    public List<String> call() {
         try {
             getDriver();
             driver.navigate().to(String.format("https://www.myscore.ru/football/%s/archive/", countryLeague));
