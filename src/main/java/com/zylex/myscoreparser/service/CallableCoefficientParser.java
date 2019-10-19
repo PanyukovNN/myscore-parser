@@ -62,6 +62,7 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
     private void processCoefficientParsing(List<Record> records) {
         int i = 1;
         for (Record record : records) {
+            Main.recordsProcessed.incrementAndGet();
             driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#odds-comparison;1x2-odds;full-time", record.getCoefHref()));
             if (!coefficientTableExists()) {
                 System.out.println(i++ + ") No coefficients: " + record);
@@ -77,13 +78,18 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
             System.out.println(i++ + ") " + record);
         }
         Record tempRecord = records.get(0);
-        System.out.printf("Finished: %s_%s_%s \nRecords number: %d \nRecords without coefficients: %d\n Play-off records: %d\n",
+        System.out.printf("Finished: %s_%s_%s" +
+                        "\nRecords number: %d" +
+                        "\nRecords without coefficients: %d" +
+                        "\nPlay-off records: %d\n" +
+                        "\nProgress: %f.",
                 tempRecord.getCountry(),
                 tempRecord.getLeagueName(),
                 tempRecord.getSeason(),
                 records.size(),
                 noCoefficientRecords,
-                playOffRecords);
+                playOffRecords,
+                ((double) records.size() / (double) Main.totalRecords.get()) * 100);
     }
 
     private boolean coefficientTableExists() {
@@ -146,8 +152,10 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
             if (checkBookmaker(bookmaker)) {
                 String[] allCoef = element.select("td.kx > span").text().split(" ");
                 Coefficient coefficient = coefficients.get(bookmaker);
-                coefficient.setMaxDch(getMaxOfThree(allCoef));
-                coefficient.setMinDch(getMinOfThree(allCoef));
+                if (coefficient != null) {
+                    coefficient.setMaxDch(getMaxOfThree(allCoef));
+                    coefficient.setMinDch(getMinOfThree(allCoef));
+                }
             }
         }
     }
@@ -158,7 +166,7 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
             double two = Double.parseDouble(args[1]);
             double three = Double.parseDouble(args[2]);
             return String.valueOf(Math.max(Math.max(one, two), three));
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             return "-";
         }
     }
@@ -169,7 +177,7 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
             double two = Double.parseDouble(args[1]);
             double three = Double.parseDouble(args[2]);
             return String.valueOf(Math.min(Math.min(one, two), three));
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             return "-";
         }
     }

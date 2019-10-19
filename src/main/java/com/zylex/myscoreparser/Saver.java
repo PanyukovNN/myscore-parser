@@ -16,9 +16,9 @@ public class Saver {
 
     private final String[] bookmakers = {"1XBET", "Winline", "Leon"};
 
-    public void processSaving(List<Record> records) {
+    public void processSaving(String fileNumbers, List<Record> records) {
         try {
-            File file = new File("results/results.csv");
+            File file = new File("results/results" + fileNumbers + ".csv");
             if (file.createNewFile()) {
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
                 writeToFile(records, writer);
@@ -50,19 +50,28 @@ public class Saver {
                 if (coefficients.containsKey(bookmaker)) {
                     Coefficient coef = coefficients.get(bookmaker);
                     line.append(String.format(COEFFICIENT_FORMAT,
-                            coef.getFirstWin().replace(".", ","),
-                            coef.getTie().replace(".", ","),
-                            coef.getSecondWin().replace(".", ","),
-                            coef.getMax1x2().replace(".", ","),
-                            coef.getMin1x2().replace(".", ","),
-                            coef.getMaxDch().replace(".", ","),
-                            coef.getMinDch().replace(".", ",")));
+                    formatDouble(coef.getFirstWin()),
+                    formatDouble(coef.getTie()),
+                    formatDouble(coef.getSecondWin()),
+                    formatDouble(coef.getMax1x2()),
+                    formatDouble(coef.getMin1x2()),
+                    formatDouble(coef.getMaxDch()),
+                    formatDouble(coef.getMinDch())));
                 } else {
                     line.append(";-;-;-;-;-;-;-");
                 }
             }
             line.append("\n");
             writer.write(line.toString());
+        }
+    }
+
+    private String formatDouble(String value) {
+        try {
+            return String.format("%.2f", Double.parseDouble(value))
+                    .replace(',', '.');
+        } catch (NumberFormatException e) {
+            return value;
         }
     }
 

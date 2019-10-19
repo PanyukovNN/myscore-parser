@@ -1,5 +1,11 @@
 package com.zylex.myscoreparser.repository;
 
+import com.zylex.myscoreparser.exceptions.RepositoryException;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Repository {
 
     private static Repository instance;
@@ -14,20 +20,20 @@ public class Repository {
         return instance;
     }
 
-    private String[] countryLeagues = {
-            "austria/tipico-bundesliga",
-            "australia/a-league",
-//            "england/premier-league",
-//            "england/championship",
-//            "argentina/superliga",
-//            "belarus/vysshaya-liga",
-//            "belgium/jupiler-league",
-//            "bulgaria/parva-liga",
-//            "brazil/serie-a",
-//            "brazil/serie-b",
-    };
-
-    public String[] getCountryLeagues() {
-        return countryLeagues;
+    public List<String> readLeaguesFromFile() {
+        try {
+            File file = new File(getClass().getClassLoader().getResource("leagues.txt").getFile());
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            List<String> leagueLinks = new ArrayList<>();
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                if (!line.contains("//") && !line.isEmpty()) {
+                    leagueLinks.add(line);
+                }
+            }
+            return leagueLinks;
+        } catch (IOException e) {
+            throw new RepositoryException(e.getMessage(), e);
+        }
     }
 }

@@ -3,7 +3,6 @@ package com.zylex.myscoreparser.service;
 import com.zylex.myscoreparser.DriverFactory;
 import com.zylex.myscoreparser.exceptions.ParseProcessorException;
 import com.zylex.myscoreparser.model.Record;
-import com.zylex.myscoreparser.repository.Repository;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -14,12 +13,12 @@ import java.util.stream.Collectors;
 
 public class ParseProcessor {
 
-    private String[] countryLeagues;
+    private List<String> leagueSeasonLinks;
 
     private ExecutorService service = Executors.newFixedThreadPool(DriverFactory.THREADS);
 
-    public ParseProcessor(Repository repository) {
-        this.countryLeagues = repository.getCountryLeagues();
+    public ParseProcessor(List<String> leagueSeasonLinks) {
+        this.leagueSeasonLinks = leagueSeasonLinks;
     }
 
     public List<Record> process() {
@@ -31,13 +30,12 @@ public class ParseProcessor {
             throw new ParseProcessorException(e.getMessage(), e);
         } finally {
             service.shutdown();
-            DriverFactory.quitDrivers();
         }
     }
 
     private List<String> processArchiveLinks() throws InterruptedException, ExecutionException {
         List<CallableArchiveParser> callableArchiveParsers = new ArrayList<>();
-        for (String countryLeague : countryLeagues) {
+        for (String countryLeague : leagueSeasonLinks) {
             callableArchiveParsers.add(new CallableArchiveParser(countryLeague));
         }
         List<Future<List<String>>> futureArchiveParsers = service.invokeAll(callableArchiveParsers);
@@ -84,10 +82,10 @@ public class ParseProcessor {
             callableCoefficientParsers.add(new CallableCoefficientParser(records));
         }
         List<Future<List<Record>>> futureRecordsLists = service.invokeAll(callableCoefficientParsers);
-        return processRecords(futureRecordsLists);
+        return processTotalRecords(futureRecordsLists);
     }
 
-    private List<Record> processRecords(List<Future<List<Record>>> futureRecordsLists) throws InterruptedException, ExecutionException {
+    private List<Record> processTotalRecords(List<Future<List<Record>>> futureRecordsLists) throws InterruptedException, ExecutionException {
         List<Record> records = new ArrayList<>();
         for (Future<List<Record>> futureRecordsList : futureRecordsLists) {
             List<Record> recordList = futureRecordsList.get();
