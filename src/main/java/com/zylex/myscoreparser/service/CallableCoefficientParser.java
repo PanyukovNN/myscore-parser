@@ -1,7 +1,6 @@
 package com.zylex.myscoreparser.service;
 
-import com.zylex.myscoreparser.DriverFactory;
-import com.zylex.myscoreparser.Main;
+import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.exceptions.CoefficientParserException;
 import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Record;
@@ -15,6 +14,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -46,8 +46,8 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
             throw new CoefficientParserException(e.getMessage(), e);
         } finally {
             DriverFactory.drivers.add(driver);
-            Main.totalPlayOffRecords.addAndGet(playOffRecords);
-            Main.totalWithNoCoef.addAndGet(noCoefficientRecords);
+            ConsoleLogger.totalPlayOffRecords.addAndGet(playOffRecords);
+            ConsoleLogger.totalWithNoCoef.addAndGet(noCoefficientRecords);
         }
     }
 
@@ -62,7 +62,7 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
     private void processCoefficientParsing(List<Record> records) {
         int i = 1;
         for (Record record : records) {
-            Main.recordsProcessed.incrementAndGet();
+            ConsoleLogger.recordsProcessed.incrementAndGet();
             driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#odds-comparison;1x2-odds;full-time", record.getCoefHref()));
             if (!coefficientTableExists()) {
                 System.out.println(i++ + ") No coefficients: " + record);
@@ -81,15 +81,15 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
         System.out.printf("Finished: %s_%s_%s" +
                         "\nRecords number: %d" +
                         "\nRecords without coefficients: %d" +
-                        "\nPlay-off records: %d\n" +
-                        "\nProgress: %f.",
+                        "\nPlay-off records: %d" +
+                        "\nProgress: %s\n",
                 tempRecord.getCountry(),
                 tempRecord.getLeagueName(),
                 tempRecord.getSeason(),
                 records.size(),
                 noCoefficientRecords,
                 playOffRecords,
-                ((double) records.size() / (double) Main.totalRecords.get()) * 100);
+                new DecimalFormat("#.00").format(ConsoleLogger.progress.addAndGet(((double) records.size() / (double) ConsoleLogger.totalRecords.get()) * 100)));
     }
 
     private boolean coefficientTableExists() {
@@ -108,7 +108,11 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
 
     private boolean isPlayOff(Document document) {
         String league = document.select("span.description__country > a").text();
-        if (!league.contains("Тур")) {
+        Record record = records.get(0);
+        int countyLength = record.getCountry().length();
+        int leagueLength = record.getLeagueName().length();
+        // 11 - is a magic number :)
+        if (league.length() - countyLength - leagueLength > 11) {
             playOffRecords++;
             return true;
         }
@@ -116,13 +120,8 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
     }
 
     private void parseCoefficients(Record record, Document document) {
-        Elements coef1x2Records = document.select("table#odds_1x2")
-                .first()
-                .select("tbody > tr");
-        Elements coefDchRecords = document.select("table#odds_dch")
-                .first()
-                .select("tbody > tr");
-
+        Elements coef1x2Records = document.select("div#block-1x2-ft > table#odds_1x2 > tbody > tr");
+        Elements coefDchRecords = document.select("div#block-double-chance-ft > table#odds_dch > tbody > tr");
         Map<String, Coefficient> coefficients = record.getCoefficients();
         process1x2Coefficients(coef1x2Records, coefficients);
         processDchCoefficients(coefDchRecords, coefficients);

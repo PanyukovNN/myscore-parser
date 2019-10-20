@@ -1,7 +1,6 @@
 package com.zylex.myscoreparser.service;
 
-import com.zylex.myscoreparser.DriverFactory;
-import com.zylex.myscoreparser.Main;
+import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.exceptions.LeagueParserException;
 import com.zylex.myscoreparser.model.Record;
 import org.jsoup.Jsoup;
@@ -16,7 +15,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 public class CallableLeagueParser implements Callable<List<Record>> {
 
@@ -35,7 +33,6 @@ public class CallableLeagueParser implements Callable<List<Record>> {
     public List<Record> call() {
         try {
             getDriver();
-            driver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
             return processLeagueParsing(leagueLink);
         } catch (InterruptedException e) {
             throw new LeagueParserException(e.getMessage(), e);
@@ -49,7 +46,7 @@ public class CallableLeagueParser implements Callable<List<Record>> {
             driver = DriverFactory.drivers.poll();
             Thread.sleep(10);
         }
-        wait = new WebDriverWait(driver, 30);
+        wait = new WebDriverWait(driver, 60);
     }
 
     private List<Record> processLeagueParsing(String leagueLink) throws InterruptedException {
@@ -79,7 +76,7 @@ public class CallableLeagueParser implements Callable<List<Record>> {
             Record record = new Record(country, league, season, gameDateTime, firstCommand, secondCommand, firstBalls, secondBalls, coefHref);
             records.add(record);
         }
-        Main.totalRecords.addAndGet(records.size());
+        ConsoleLogger.totalRecords.addAndGet(records.size());
         return records;
     }
 

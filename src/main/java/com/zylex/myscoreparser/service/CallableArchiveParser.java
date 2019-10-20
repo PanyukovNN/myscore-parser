@@ -1,6 +1,5 @@
 package com.zylex.myscoreparser.service;
 
-import com.zylex.myscoreparser.DriverFactory;
 import com.zylex.myscoreparser.exceptions.ArchiveParserException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -43,7 +42,7 @@ public class CallableArchiveParser implements Callable<List<String>> {
             driver = DriverFactory.drivers.poll();
             Thread.sleep(10);
         }
-        wait = new WebDriverWait(driver, 30);
+        wait = new WebDriverWait(driver, 180);
     }
 
     private List<String> parseArchive() {

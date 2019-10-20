@@ -1,6 +1,5 @@
 package com.zylex.myscoreparser.service;
 
-import com.zylex.myscoreparser.DriverFactory;
 import com.zylex.myscoreparser.exceptions.ParseProcessorException;
 import com.zylex.myscoreparser.model.Record;
 

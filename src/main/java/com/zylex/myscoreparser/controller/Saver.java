@@ -1,4 +1,4 @@
-package com.zylex.myscoreparser;
+package com.zylex.myscoreparser.controller;
 
 import com.zylex.myscoreparser.exceptions.SaverException;
 import com.zylex.myscoreparser.model.Coefficient;
@@ -6,6 +6,7 @@ import com.zylex.myscoreparser.model.Record;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,7 @@ public class Saver {
 
     private String formatDouble(String value) {
         try {
-            return String.format("%.2f", Double.parseDouble(value))
+            return new DecimalFormat("#.00").format(Double.parseDouble(value))
                     .replace(',', '.');
         } catch (NumberFormatException e) {
             return value;
