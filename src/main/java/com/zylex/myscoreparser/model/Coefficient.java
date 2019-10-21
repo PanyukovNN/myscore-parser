@@ -14,9 +14,9 @@ public class Coefficient {
 
     private String min1x2 = "-";
 
-    private String maxDch = "-";
+    private String dch1X = "-";
 
-    private String minDch = "-";
+    private String dchX2 = "-";
 
     public Coefficient(String bookmaker, String firstWin, String tie, String secondWin, String max1x2, String min1x2) {
         this.bookmaker = bookmaker;
@@ -51,20 +51,20 @@ public class Coefficient {
         return min1x2;
     }
 
-    public void setMaxDch(String maxDch) {
-        this.maxDch = maxDch;
+    public void setDch1X(String dch1X) {
+        this.dch1X = dch1X;
     }
 
-    public void setMinDch(String minDch) {
-        this.minDch = minDch;
+    public void setDchX2(String dchX2) {
+        this.dchX2 = dchX2;
     }
 
-    public String getMaxDch() {
-        return maxDch;
+    public String getDch1X() {
+        return dch1X;
     }
 
-    public String getMinDch() {
-        return minDch;
+    public String getDchX2() {
+        return dchX2;
     }
 
     @Override
@@ -76,8 +76,8 @@ public class Coefficient {
                 ", secondWin='" + secondWin + '\'' +
                 ", max1x2='" + max1x2 + '\'' +
                 ", min1x2='" + min1x2 + '\'' +
-                ", maxDch='" + maxDch + '\'' +
-                ", minDch='" + minDch + '\'' +
+                ", dch1X='" + dch1X + '\'' +
+                ", dchX2='" + dchX2 + '\'' +
                 '}';
     }
 }

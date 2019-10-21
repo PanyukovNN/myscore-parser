@@ -20,6 +20,7 @@ public class Saver {
     public void processSaving(String fileNumbers, List<Record> records) {
         try {
             File file = new File("results/results" + fileNumbers + ".csv");
+            //TODO
             if (file.createNewFile()) {
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
                 writeToFile(records, writer);
@@ -56,8 +57,8 @@ public class Saver {
                     formatDouble(coef.getSecondWin()),
                     formatDouble(coef.getMax1x2()),
                     formatDouble(coef.getMin1x2()),
-                    formatDouble(coef.getMaxDch()),
-                    formatDouble(coef.getMinDch())));
+                    formatDouble(coef.getDch1X()),
+                    formatDouble(coef.getDchX2())));
                 } else {
                     line.append(";-;-;-;-;-;-;-");
                 }
@@ -70,7 +71,7 @@ public class Saver {
     private String formatDouble(String value) {
         try {
             return new DecimalFormat("#.00").format(Double.parseDouble(value))
-                    .replace(',', '.');
+                    .replace('.', ',');
         } catch (NumberFormatException e) {
             return value;
         }

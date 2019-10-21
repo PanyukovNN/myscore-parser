@@ -1,5 +1,6 @@
 package com.zylex.myscoreparser.service;
 
+import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.exceptions.ParseProcessorException;
 import com.zylex.myscoreparser.model.Record;
 
@@ -23,8 +24,13 @@ public class ParseProcessor {
     public List<Record> process() {
         try {
             List<String> archiveLinks = processArchiveLinks();
+            System.out.println("Archives parsed.");
             List<List<Record>> leagueRecords = processLeagueRecords(archiveLinks);
-            return processCoefficients(leagueRecords);
+            System.out.println("Records lists parsed.");
+            List<Record> records = processCoefficients(leagueRecords);
+            ConsoleLogger.progress.set(0);
+            ConsoleLogger.totalRecords.set(0);
+            return records;
         } catch (InterruptedException | ExecutionException e) {
             throw new ParseProcessorException(e.getMessage(), e);
         } finally {

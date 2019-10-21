@@ -84,14 +84,14 @@ public class CallableLeagueParser implements Callable<List<Record>> {
         while (true) {
             try {
                 wait.until(webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-                Thread.sleep(1000);
+                Thread.sleep(2000);
                 if (driver.findElements(By.className("event__more")).size() > 0) {
                     driver.findElement(By.className("event__more")).click();
                 } else {
                     break;
                 }
-            } catch (StaleElementReferenceException | ElementClickInterceptedException e) {
-                System.out.println("Can't click, trying again...");
+            } catch (NoSuchElementException | StaleElementReferenceException | ElementClickInterceptedException e) {
+                System.out.println("Can't click \"show more\" button, trying again...");
             }
         }
     }

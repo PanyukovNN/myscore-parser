@@ -40,7 +40,7 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
         try {
             getDriver();
             driver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
-            processCoefficientParsing(records);
+            processCoefficientParsing();
             return records;
         } catch (InterruptedException e) {
             throw new CoefficientParserException(e.getMessage(), e);
@@ -59,7 +59,7 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
         wait = new WebDriverWait(driver, 2);
     }
 
-    private void processCoefficientParsing(List<Record> records) {
+    private void processCoefficientParsing() {
         int i = 1;
         for (Record record : records) {
             ConsoleLogger.recordsProcessed.incrementAndGet();
@@ -77,19 +77,33 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
             parseCoefficients(record, document);
             System.out.println(i++ + ") " + record);
         }
+        leagueSummarizing();
+    }
+
+    private void leagueSummarizing() {
+        long endTime = System.currentTimeMillis();
+        long seconds = (endTime - ConsoleLogger.startTime.get()) / 1000;
+        long minutes = seconds / 60;
+        long houres = 0;
+        if (minutes > 60) {
+            houres = minutes / 60;
+            minutes = minutes % 60;
+        }
         Record tempRecord = records.get(0);
         System.out.printf("Finished: %s_%s_%s" +
                         "\nRecords number: %d" +
                         "\nRecords without coefficients: %d" +
                         "\nPlay-off records: %d" +
-                        "\nProgress: %s\n",
+                        "\nProgress: %s" +
+                        "\nCurrent working time: %s\n",
                 tempRecord.getCountry(),
                 tempRecord.getLeagueName(),
                 tempRecord.getSeason(),
                 records.size(),
                 noCoefficientRecords,
                 playOffRecords,
-                new DecimalFormat("#.00").format(ConsoleLogger.progress.addAndGet(((double) records.size() / (double) ConsoleLogger.totalRecords.get()) * 100)));
+                new DecimalFormat("#.00").format(ConsoleLogger.progress.addAndGet(((double) records.size() / (double) ConsoleLogger.totalRecords.get()) * 100)),
+                (houres == 0 ? "" : houres + "h. ") + minutes + " min. " + seconds % 60 + " sec.");
     }
 
     private boolean coefficientTableExists() {
@@ -152,8 +166,13 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
                 String[] allCoef = element.select("td.kx > span").text().split(" ");
                 Coefficient coefficient = coefficients.get(bookmaker);
                 if (coefficient != null) {
-                    coefficient.setMaxDch(getMaxOfThree(allCoef));
-                    coefficient.setMinDch(getMinOfThree(allCoef));
+                    if (allCoef[0].equals("-") || allCoef[1].equals("-") || allCoef[2].equals("-")) {
+                        coefficient.setDch1X("-");
+                        coefficient.setDchX2("-");
+                    } else {
+                        coefficient.setDch1X(allCoef[0]);
+                        coefficient.setDchX2(allCoef[2]);
+                    }
                 }
             }
         }

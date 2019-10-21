@@ -3,6 +3,7 @@ package com.zylex.myscoreparser.controller;
 import com.google.common.util.concurrent.AtomicDouble;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class ConsoleLogger {
 
@@ -16,9 +17,11 @@ public class ConsoleLogger {
 
     public static AtomicDouble progress = new AtomicDouble(0);
 
-    public static void summarizing(long startTime) {
+    public static AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
+
+    public static void summarizing() {
         long endTime = System.currentTimeMillis();
-        long seconds = (endTime - startTime) / 1000;
+        long seconds = (endTime - startTime.get()) / 1000;
         long minutes = seconds / 60;
         long houres = 0;
         if (minutes > 60) {

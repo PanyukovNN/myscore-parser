@@ -9,12 +9,14 @@ import com.zylex.myscoreparser.service.ParseProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 public class Main {
 
     public static void main(String[] args) {
-        long startTime = System.currentTimeMillis();
         try {
+            System.setProperty("webdriver.chrome.silentOutput", "true");
+            java.util.logging.Logger.getLogger("org.openqa.selenium").setLevel(Level.OFF);
             Repository repository = Repository.getInstance();
             List<String> leagueLinks = repository.readLeaguesFromFile();
             List<List<String>> discreteList = new ArrayList<>();
@@ -31,10 +33,11 @@ public class Main {
                 List<Record> records = parseProcessor.process();
                 Saver saver = new Saver();
                 saver.processSaving(String.valueOf(discreteList.indexOf(list)), records);
+                System.out.println(discreteList.indexOf(list) + " block is finished.\n" + "Starting new block...");
             }
         } finally {
             DriverFactory.quitDrivers();
-            ConsoleLogger.summarizing(startTime);
+            ConsoleLogger.summarizing();
         }
     }
 }
