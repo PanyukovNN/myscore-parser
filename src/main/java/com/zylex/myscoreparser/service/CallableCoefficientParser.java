@@ -14,7 +14,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -60,50 +59,20 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
     }
 
     private void processCoefficientParsing() {
-        int i = 1;
         for (Record record : records) {
-            ConsoleLogger.recordsProcessed.incrementAndGet();
+            ConsoleLogger.processedRecords.incrementAndGet();
+            ConsoleLogger.logRecord();
             driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#odds-comparison;1x2-odds;full-time", record.getCoefHref()));
             if (!coefficientTableExists()) {
-                System.out.println(i++ + ") No coefficients: " + record);
                 continue;
             }
-            String pageSourse = driver.getPageSource();
-            Document document = Jsoup.parse(pageSourse);
+            String pageSource = driver.getPageSource();
+            Document document = Jsoup.parse(pageSource);
             if (isPlayOff(document)) {
-                System.out.println(i++ + ") Play-off record: " + record);
                 continue;
             }
             parseCoefficients(record, document);
-            System.out.println(i++ + ") " + record);
         }
-        leagueSummarizing();
-    }
-
-    private void leagueSummarizing() {
-        long endTime = System.currentTimeMillis();
-        long seconds = (endTime - ConsoleLogger.startTime.get()) / 1000;
-        long minutes = seconds / 60;
-        long houres = 0;
-        if (minutes > 60) {
-            houres = minutes / 60;
-            minutes = minutes % 60;
-        }
-        Record tempRecord = records.get(0);
-        System.out.printf("Finished: %s_%s_%s" +
-                        "\nRecords number: %d" +
-                        "\nRecords without coefficients: %d" +
-                        "\nPlay-off records: %d" +
-                        "\nProgress: %s" +
-                        "\nCurrent working time: %s\n",
-                tempRecord.getCountry(),
-                tempRecord.getLeagueName(),
-                tempRecord.getSeason(),
-                records.size(),
-                noCoefficientRecords,
-                playOffRecords,
-                new DecimalFormat("#.00").format(ConsoleLogger.progress.addAndGet(((double) records.size() / (double) ConsoleLogger.totalRecords.get()) * 100)),
-                (houres == 0 ? "" : houres + "h. ") + minutes + " min. " + seconds % 60 + " sec.");
     }
 
     private boolean coefficientTableExists() {
@@ -122,11 +91,7 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
 
     private boolean isPlayOff(Document document) {
         String league = document.select("span.description__country > a").text();
-        Record record = records.get(0);
-        int countyLength = record.getCountry().length();
-        int leagueLength = record.getLeagueName().length();
-        // 11 - is a magic number :)
-        if (league.length() - countyLength - leagueLength > 11) {
+        if (league.contains("плей-офф")) {
             playOffRecords++;
             return true;
         }
@@ -213,7 +178,7 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
 
     private boolean checkBookmaker(String bookmaker) {
         String[] bookmakers = {"1XBET", "Winline", "Leon"};
-        for (String bm: bookmakers) {
+        for (String bm : bookmakers) {
             if (bm.equalsIgnoreCase(bookmaker)) {
                 return true;
             }

@@ -77,6 +77,7 @@ public class CallableLeagueParser implements Callable<List<Record>> {
             records.add(record);
         }
         ConsoleLogger.totalRecords.addAndGet(records.size());
+        ConsoleLogger.blockRecords.addAndGet(records.size());
         return records;
     }
 

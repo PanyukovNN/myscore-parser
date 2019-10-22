@@ -23,13 +23,18 @@ public class ParseProcessor {
 
     public List<Record> process() {
         try {
+            ConsoleLogger.writeLine("Starting archives parsing...");
             List<String> archiveLinks = processArchiveLinks();
-            System.out.println("Archives parsed.");
+            ConsoleLogger.writeLine("Archives have parsed successfully.");
+
+            ConsoleLogger.writeLine("Starting leagues parsing...");
             List<List<Record>> leagueRecords = processLeagueRecords(archiveLinks);
-            System.out.println("Records lists parsed.");
+            ConsoleLogger.writeLine("Leagues have parsed successfully.");
+
+            ConsoleLogger.writeLine("Starting coefficients parsing:");
+            ConsoleLogger.writeInLine("Block №" + ConsoleLogger.blockNumber + " is finished on 00.00%");
             List<Record> records = processCoefficients(leagueRecords);
-            ConsoleLogger.progress.set(0);
-            ConsoleLogger.totalRecords.set(0);
+            ConsoleLogger.blockRecords.set(0);
             return records;
         } catch (InterruptedException | ExecutionException e) {
             throw new ParseProcessorException(e.getMessage(), e);

@@ -9,17 +9,17 @@ import com.zylex.myscoreparser.service.ParseProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
+import java.util.concurrent.atomic.AtomicLong;
+
 
 public class Main {
 
     public static void main(String[] args) {
         try {
-            System.setProperty("webdriver.chrome.silentOutput", "true");
-            java.util.logging.Logger.getLogger("org.openqa.selenium").setLevel(Level.OFF);
             Repository repository = Repository.getInstance();
             List<String> leagueLinks = repository.readLeaguesFromFile();
             List<List<String>> discreteList = new ArrayList<>();
+            Saver saver = new Saver();
             while (true) {
                 if (leagueLinks.size() <= DriverFactory.THREADS) {
                     discreteList.add(leagueLinks);
@@ -29,15 +29,14 @@ public class Main {
                 leagueLinks = leagueLinks.subList(DriverFactory.THREADS, leagueLinks.size());
             }
             for (List<String> list : discreteList) {
+                ConsoleLogger.blockStartTime = new AtomicLong(System.currentTimeMillis());
                 ParseProcessor parseProcessor = new ParseProcessor(list);
                 List<Record> records = parseProcessor.process();
-                Saver saver = new Saver();
-                saver.processSaving(String.valueOf(discreteList.indexOf(list)), records);
-                System.out.println(discreteList.indexOf(list) + " block is finished.\n" + "Starting new block...");
+                saver.processSaving(records);
             }
         } finally {
             DriverFactory.quitDrivers();
-            ConsoleLogger.summarizing();
+            ConsoleLogger.totalSummarizing();
         }
     }
 }

@@ -7,6 +7,7 @@ import com.zylex.myscoreparser.model.Record;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -15,20 +16,30 @@ public class Saver {
 
     private final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd;HH:mm");
 
+    private final DateTimeFormatter FILE_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm");
+
     private final String[] bookmakers = {"1XBET", "Winline", "Leon"};
 
-    public void processSaving(String fileNumbers, List<Record> records) {
+    public void processSaving(List<Record> records) {
         try {
-            File file = new File("results/results" + fileNumbers + ".csv");
-            //TODO
-            if (file.createNewFile()) {
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
-                writeToFile(records, writer);
-                writer.close();
-            }
+            File file = createBlockFile();
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
+            writeToFile(records, writer);
+            writer.close();
+            ConsoleLogger.blockSummarizing();
         } catch (IOException e) {
             throw new SaverException(e.getMessage(), e);
         }
+    }
+
+    private File createBlockFile() throws IOException {
+        String dirName = FILE_DATE_FORMATTER.format(LocalDateTime.now());
+        new File("results/" + dirName).mkdir();
+        File file = new File("results/" + dirName + "/results" + ConsoleLogger.blockNumber++ + ".csv");
+        if (!file.exists()) {
+            file.createNewFile();
+        }
+        return file;
     }
 
     private void writeToFile(List<Record> records, BufferedWriter writer) throws IOException {
