@@ -1,5 +1,6 @@
 package com.zylex.myscoreparser.service;
 
+import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.exceptions.ArchiveParserException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -26,7 +27,8 @@ public class CallableArchiveParser implements Callable<List<String>> {
 
     public List<String> call() {
         try {
-            getDriver();
+            driver = DriverFactory.getDriver();
+            wait = new WebDriverWait(driver, 180);
             driver.navigate().to(String.format("https://www.myscore.ru/football/%s/archive/", countryLeague));
             wait.until(webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
             return parseArchive();
@@ -37,15 +39,9 @@ public class CallableArchiveParser implements Callable<List<String>> {
         }
     }
 
-    private void getDriver() throws InterruptedException {
-        while (driver == null) {
-            driver = DriverFactory.drivers.poll();
-            Thread.sleep(10);
-        }
-        wait = new WebDriverWait(driver, 180);
-    }
-
     private List<String> parseArchive() {
+        ConsoleLogger.processedArchives.incrementAndGet();
+        ConsoleLogger.logArchive();
         String pageSource = driver.getPageSource();
         Document doc = Jsoup.parse(pageSource);
         Elements archiveElements = doc.select("div.leagueTable__season > div.leagueTable__seasonName > a");

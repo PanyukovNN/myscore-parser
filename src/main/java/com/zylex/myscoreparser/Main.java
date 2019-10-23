@@ -11,15 +11,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-
 public class Main {
 
     public static void main(String[] args) {
         try {
-            Repository repository = Repository.getInstance();
+            Context context = Context.getInstance();
+            context.init();
+            Repository repository = context.getRepository();
             List<String> leagueLinks = repository.readLeaguesFromFile();
             List<List<String>> discreteList = new ArrayList<>();
-            Saver saver = new Saver();
+            Saver saver = context.getSaver();
             while (true) {
                 if (leagueLinks.size() <= DriverFactory.THREADS) {
                     discreteList.add(leagueLinks);

@@ -23,18 +23,10 @@ public class ParseProcessor {
 
     public List<Record> process() {
         try {
-            ConsoleLogger.writeLine("Starting archives parsing...");
             List<String> archiveLinks = processArchiveLinks();
-            ConsoleLogger.writeLine("Archives have parsed successfully.");
-
-            ConsoleLogger.writeLine("Starting leagues parsing...");
             List<List<Record>> leagueRecords = processLeagueRecords(archiveLinks);
-            ConsoleLogger.writeLine("Leagues have parsed successfully.");
-
-            ConsoleLogger.writeLine("Starting coefficients parsing:");
-            ConsoleLogger.writeInLine("Block №" + ConsoleLogger.blockNumber + " is finished on 00.00%");
             List<Record> records = processCoefficients(leagueRecords);
-            ConsoleLogger.blockRecords.set(0);
+            ConsoleLogger.dropBlockLog();
             return records;
         } catch (InterruptedException | ExecutionException e) {
             throw new ParseProcessorException(e.getMessage(), e);
@@ -44,6 +36,8 @@ public class ParseProcessor {
     }
 
     private List<String> processArchiveLinks() throws InterruptedException, ExecutionException {
+        ConsoleLogger.blockArchives.set(leagueSeasonLinks.size());
+        ConsoleLogger.writeInLine("\nProcessing block №" + ConsoleLogger.blockNumber + " archives: 0 out of " + leagueSeasonLinks.size());
         List<CallableArchiveParser> callableArchiveParsers = new ArrayList<>();
         for (String countryLeague : leagueSeasonLinks) {
             callableArchiveParsers.add(new CallableArchiveParser(countryLeague));
@@ -61,6 +55,8 @@ public class ParseProcessor {
     }
 
     private List<List<Record>> processLeagueRecords(List<String> archiveLinks) throws InterruptedException, ExecutionException {
+        ConsoleLogger.blockLeagues.set(archiveLinks.size());
+        ConsoleLogger.writeInLine("\nProcessing block №" + ConsoleLogger.blockNumber + " seasons: 0 out of " + archiveLinks.size());
         List<CallableLeagueParser> callableLeagueParsers = new ArrayList<>();
         for (String archiveLink : archiveLinks) {
             callableLeagueParsers.add(new CallableLeagueParser(archiveLink));
@@ -87,6 +83,7 @@ public class ParseProcessor {
     }
 
     private List<Record> processCoefficients(List<List<Record>> recordsList) throws InterruptedException, ExecutionException {
+        ConsoleLogger.writeInLine("\nProcessing block №" + ConsoleLogger.blockNumber + " coefficients: 00.00%");
         List<CallableCoefficientParser> callableCoefficientParsers = new ArrayList<>();
         for (List<Record> records : recordsList) {
             callableCoefficientParsers.add(new CallableCoefficientParser(records));

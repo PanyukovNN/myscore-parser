@@ -32,8 +32,11 @@ public class Saver {
         }
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private File createBlockFile() throws IOException {
         String dirName = FILE_DATE_FORMATTER.format(LocalDateTime.now());
+        //TODO
+        new File("results").mkdir();
         new File("results/" + dirName).mkdir();
         File file = new File("results/" + dirName + "/results" + ConsoleLogger.blockNumber++ + ".csv");
         if (!file.exists()) {

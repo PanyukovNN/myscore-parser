@@ -37,8 +37,8 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
 
     public List<Record> call() {
         try {
-            getDriver();
-            driver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
+            driver = DriverFactory.getDriver();
+            wait = new WebDriverWait(driver, 2);
             processCoefficientParsing();
             return records;
         } catch (InterruptedException e) {
@@ -48,14 +48,6 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
             ConsoleLogger.totalPlayOffRecords.addAndGet(playOffRecords);
             ConsoleLogger.totalWithNoCoef.addAndGet(noCoefficientRecords);
         }
-    }
-
-    private void getDriver() throws InterruptedException {
-        while (driver == null) {
-            driver = DriverFactory.drivers.poll();
-            Thread.sleep(10);
-        }
-        wait = new WebDriverWait(driver, 2);
     }
 
     private void processCoefficientParsing() {
