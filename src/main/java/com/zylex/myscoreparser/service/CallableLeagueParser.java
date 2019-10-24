@@ -26,19 +26,22 @@ public class CallableLeagueParser implements Callable<List<Record>> {
 
     private final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
-    CallableLeagueParser(String leagueLink) {
+    private DriverFactory driverFactory;
+
+    CallableLeagueParser(DriverFactory driverFactory, String leagueLink) {
+        this.driverFactory = driverFactory;
         this.leagueLink = leagueLink;
     }
 
     public List<Record> call() {
         try {
-            driver = DriverFactory.getDriver();
+            driver = driverFactory.getDriver();
             wait = new WebDriverWait(driver, 60);
             return processLeagueParsing(leagueLink);
         } catch (InterruptedException e) {
             throw new LeagueParserException(e.getMessage(), e);
         } finally {
-            DriverFactory.drivers.add(driver);
+            driverFactory.addDriverToQueue(driver);
         }
     }
 
@@ -69,10 +72,7 @@ public class CallableLeagueParser implements Callable<List<Record>> {
             Record record = new Record(country, league, season, gameDateTime, firstCommand, secondCommand, firstBalls, secondBalls, coefHref);
             records.add(record);
         }
-        ConsoleLogger.totalRecords.addAndGet(records.size());
-        ConsoleLogger.blockRecords.addAndGet(records.size());
-        ConsoleLogger.processedSeasons.incrementAndGet();
-        ConsoleLogger.logSeason();
+        ConsoleLogger.logSeason(records.size());
         return records;
     }
 

@@ -17,30 +17,30 @@ public class CallableArchiveParser implements Callable<List<String>> {
 
     private WebDriver driver = null;
 
-    private WebDriverWait wait;
-
     private String countryLeague;
 
-    CallableArchiveParser(String countryLeagues) {
+    private DriverFactory driverFactory;
+
+    CallableArchiveParser(DriverFactory driverFactory, String countryLeagues) {
+        this.driverFactory = driverFactory;
         this.countryLeague = countryLeagues;
     }
 
     public List<String> call() {
         try {
-            driver = DriverFactory.getDriver();
-            wait = new WebDriverWait(driver, 180);
+            driver = driverFactory.getDriver();
+            WebDriverWait wait = new WebDriverWait(driver, 180);
             driver.navigate().to(String.format("https://www.myscore.ru/football/%s/archive/", countryLeague));
             wait.until(webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
             return parseArchive();
         } catch (InterruptedException e) {
             throw new ArchiveParserException(e.getMessage(), e);
         } finally {
-            DriverFactory.drivers.add(driver);
+            driverFactory.addDriverToQueue(driver);
         }
     }
 
     private List<String> parseArchive() {
-        ConsoleLogger.processedArchives.incrementAndGet();
         ConsoleLogger.logArchive();
         String pageSource = driver.getPageSource();
         Document doc = Jsoup.parse(pageSource);

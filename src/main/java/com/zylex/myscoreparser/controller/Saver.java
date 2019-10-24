@@ -20,9 +20,9 @@ public class Saver {
 
     private final String[] bookmakers = {"1XBET", "Winline", "Leon"};
 
-    public void processSaving(List<Record> records) {
+    public void processSaving(String dirName, List<Record> records) {
         try {
-            File file = createBlockFile();
+            File file = createBlockFile(dirName);
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
             writeToFile(records, writer);
             writer.close();
@@ -33,11 +33,15 @@ public class Saver {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private File createBlockFile() throws IOException {
+    public String createDirectory() {
         String dirName = FILE_DATE_FORMATTER.format(LocalDateTime.now());
-        //TODO
         new File("results").mkdir();
         new File("results/" + dirName).mkdir();
+        return dirName;
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private File createBlockFile(String dirName) throws IOException {
         File file = new File("results/" + dirName + "/results" + ConsoleLogger.blockNumber++ + ".csv");
         if (!file.exists()) {
             file.createNewFile();

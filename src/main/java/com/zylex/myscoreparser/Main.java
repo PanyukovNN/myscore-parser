@@ -7,36 +7,26 @@ import com.zylex.myscoreparser.repository.Repository;
 import com.zylex.myscoreparser.service.DriverFactory;
 import com.zylex.myscoreparser.service.ParseProcessor;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class Main {
 
     public static void main(String[] args) {
+        int threads = Integer.parseInt(args[0]);
+        Context context = Context.getInstance();
+        context.init();
+        Repository repository = context.getRepository();
+        DriverFactory driverFactory = context.getDriverFactory(threads);
+        ParseProcessor parseProcessor = context.getParseProcessor();
+        Saver saver = context.getSaver();
+        String dirName = saver.createDirectory();
         try {
-            Context context = Context.getInstance();
-            context.init();
-            Repository repository = context.getRepository();
-            List<String> leagueLinks = repository.readLeaguesFromFile();
-            List<List<String>> discreteList = new ArrayList<>();
-            Saver saver = context.getSaver();
-            while (true) {
-                if (leagueLinks.size() <= DriverFactory.THREADS) {
-                    discreteList.add(leagueLinks);
-                    break;
-                }
-                discreteList.add(leagueLinks.subList(0, DriverFactory.THREADS));
-                leagueLinks = leagueLinks.subList(DriverFactory.THREADS, leagueLinks.size());
-            }
-            for (List<String> list : discreteList) {
-                ConsoleLogger.blockStartTime = new AtomicLong(System.currentTimeMillis());
-                ParseProcessor parseProcessor = new ParseProcessor(list);
-                List<Record> records = parseProcessor.process();
-                saver.processSaving(records);
-            }
+            repository.readDiscreteLeaguesFromFile(threads).forEach(leagueList -> {
+                List<Record> records = parseProcessor.process(driverFactory, leagueList);
+                saver.processSaving(dirName, records);
+            });
         } finally {
-            DriverFactory.quitDrivers();
+            driverFactory.quitDrivers();
             ConsoleLogger.totalSummarizing();
         }
     }

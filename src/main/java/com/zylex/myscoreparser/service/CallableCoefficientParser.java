@@ -17,7 +17,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 public class CallableCoefficientParser implements Callable<List<Record>> {
 
@@ -31,20 +30,23 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
 
     private int noCoefficientRecords = 0;
 
-    CallableCoefficientParser(List<Record> records) {
+    private DriverFactory driverFactory;
+
+    CallableCoefficientParser(DriverFactory driverFactory, List<Record> records) {
         this.records = records;
+        this.driverFactory = driverFactory;
     }
 
     public List<Record> call() {
         try {
-            driver = DriverFactory.getDriver();
+            driver = driverFactory.getDriver();
             wait = new WebDriverWait(driver, 2);
             processCoefficientParsing();
             return records;
         } catch (InterruptedException e) {
             throw new CoefficientParserException(e.getMessage(), e);
         } finally {
-            DriverFactory.drivers.add(driver);
+            driverFactory.addDriverToQueue(driver);
             ConsoleLogger.totalPlayOffRecords.addAndGet(playOffRecords);
             ConsoleLogger.totalWithNoCoef.addAndGet(noCoefficientRecords);
         }
@@ -52,7 +54,6 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
 
     private void processCoefficientParsing() {
         for (Record record : records) {
-            ConsoleLogger.processedRecords.incrementAndGet();
             ConsoleLogger.logRecord();
             driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#odds-comparison;1x2-odds;full-time", record.getCoefHref()));
             if (!coefficientTableExists()) {

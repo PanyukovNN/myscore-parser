@@ -9,21 +9,21 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class ParseProcessor {
 
-    private List<String> leagueSeasonLinks;
+    private DriverFactory driverFactory;
 
-    private ExecutorService service = Executors.newFixedThreadPool(DriverFactory.THREADS);
+    private ExecutorService service;
 
-    public ParseProcessor(List<String> leagueSeasonLinks) {
-        this.leagueSeasonLinks = leagueSeasonLinks;
-    }
-
-    public List<Record> process() {
+    public List<Record> process(DriverFactory driverFactory, List<String> leagueSeasonLinks) {
+        this.driverFactory = driverFactory;
+        this.service = Executors.newFixedThreadPool(driverFactory.getThreads());
+        ConsoleLogger.blockStartTime = new AtomicLong(System.currentTimeMillis());
         try {
-            List<String> archiveLinks = processArchiveLinks();
+            List<String> archiveLinks = processArchiveLinks(leagueSeasonLinks);
             List<List<Record>> leagueRecords = processLeagueRecords(archiveLinks);
             List<Record> records = processCoefficients(leagueRecords);
             ConsoleLogger.dropBlockLog();
@@ -35,12 +35,14 @@ public class ParseProcessor {
         }
     }
 
-    private List<String> processArchiveLinks() throws InterruptedException, ExecutionException {
+    private List<String> processArchiveLinks(List<String> leagueSeasonLinks) throws InterruptedException, ExecutionException {
         ConsoleLogger.blockArchives.set(leagueSeasonLinks.size());
-        ConsoleLogger.writeInLine("\nProcessing block №" + ConsoleLogger.blockNumber + " archives: 0 out of " + leagueSeasonLinks.size());
+        ConsoleLogger.writeInLine(String.format("\nProcessing block №%d archives: 0/%d",
+                ConsoleLogger.blockNumber,
+                ConsoleLogger.blockArchives.get()));
         List<CallableArchiveParser> callableArchiveParsers = new ArrayList<>();
         for (String countryLeague : leagueSeasonLinks) {
-            callableArchiveParsers.add(new CallableArchiveParser(countryLeague));
+            callableArchiveParsers.add(new CallableArchiveParser(driverFactory, countryLeague));
         }
         List<Future<List<String>>> futureArchiveParsers = service.invokeAll(callableArchiveParsers);
         return convertFutureArchiveLinks(futureArchiveParsers);
@@ -56,10 +58,12 @@ public class ParseProcessor {
 
     private List<List<Record>> processLeagueRecords(List<String> archiveLinks) throws InterruptedException, ExecutionException {
         ConsoleLogger.blockLeagues.set(archiveLinks.size());
-        ConsoleLogger.writeInLine("\nProcessing block №" + ConsoleLogger.blockNumber + " seasons: 0 out of " + archiveLinks.size());
+        ConsoleLogger.writeInLine(String.format("\nProcessing block №%d seasons: 0/%d",
+                ConsoleLogger.blockNumber,
+                ConsoleLogger.blockLeagues.get()));
         List<CallableLeagueParser> callableLeagueParsers = new ArrayList<>();
         for (String archiveLink : archiveLinks) {
-            callableLeagueParsers.add(new CallableLeagueParser(archiveLink));
+            callableLeagueParsers.add(new CallableLeagueParser(driverFactory, archiveLink));
         }
         List<Future<List<Record>>> futureLeagueRecords = service.invokeAll(callableLeagueParsers);
         List<List<Record>> recordsLinks = convertFutureLeagueRecords(futureLeagueRecords);
@@ -83,10 +87,12 @@ public class ParseProcessor {
     }
 
     private List<Record> processCoefficients(List<List<Record>> recordsList) throws InterruptedException, ExecutionException {
-        ConsoleLogger.writeInLine("\nProcessing block №" + ConsoleLogger.blockNumber + " coefficients: 00.00%");
+        ConsoleLogger.writeInLine(String.format("\nProcessing block №%d coefficients: 0/%d (0.0%%)",
+                        ConsoleLogger.blockNumber,
+                        ConsoleLogger.blockRecords.get()));
         List<CallableCoefficientParser> callableCoefficientParsers = new ArrayList<>();
         for (List<Record> records : recordsList) {
-            callableCoefficientParsers.add(new CallableCoefficientParser(records));
+            callableCoefficientParsers.add(new CallableCoefficientParser(driverFactory, records));
         }
         List<Future<List<Record>>> futureRecordsLists = service.invokeAll(callableCoefficientParsers);
         return processTotalRecords(futureRecordsLists);

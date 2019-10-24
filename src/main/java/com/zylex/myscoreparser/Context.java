@@ -3,6 +3,7 @@ package com.zylex.myscoreparser;
 import com.zylex.myscoreparser.controller.Saver;
 import com.zylex.myscoreparser.repository.Repository;
 import com.zylex.myscoreparser.service.DriverFactory;
+import com.zylex.myscoreparser.service.ParseProcessor;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -11,33 +12,34 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 
-public class Context {
-
-    private DriverFactory driverFactory;
+class Context {
 
     private Saver saver;
 
     private Repository repository;
 
+    private ParseProcessor parseProcessor;
 
-    public static Context instance;
+    private static Context instance;
 
     private Context() {
     }
 
-    public static Context getInstance() {
+    static Context getInstance() {
         if (instance == null) {
             instance = new Context();
         }
         return instance;
     }
 
-    public void init() {
+    void init() {
         setSystemProperties();
-        repository = Repository.getInstance();
+        parseProcessor = new ParseProcessor();
+        repository = new Repository();
         saver = new Saver();
     }
 
+    @SuppressWarnings("unchecked")
     private void setSystemProperties() {
         List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
         loggers.add(LogManager.getRootLogger());
@@ -47,15 +49,19 @@ public class Context {
         java.util.logging.Logger.getLogger("org.openqa.selenium").setLevel(Level.OFF);
     }
 
-    public DriverFactory getDriverFactory() {
-        return driverFactory;
+    DriverFactory getDriverFactory(int threads) {
+        return new DriverFactory(threads);
     }
 
-    public Saver getSaver() {
+    Saver getSaver() {
         return saver;
     }
 
-    public Repository getRepository() {
+    Repository getRepository() {
         return repository;
+    }
+
+    ParseProcessor getParseProcessor() {
+        return parseProcessor;
     }
 }

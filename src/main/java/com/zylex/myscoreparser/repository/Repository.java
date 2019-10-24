@@ -9,19 +9,7 @@ import java.util.List;
 
 public class Repository {
 
-    private static Repository instance;
-
-    private Repository() {
-    }
-
-    public static Repository getInstance() {
-        if (instance == null) {
-            instance = new Repository();
-        }
-        return instance;
-    }
-
-    public List<String> readLeaguesFromFile() {
+    public List<List<String>> readDiscreteLeaguesFromFile(int threads) {
         try {
             InputStream inputStream = DriverFactory.class.getResourceAsStream("/leagues.txt");
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -32,9 +20,22 @@ public class Repository {
                     leagueLinks.add(line);
                 }
             }
-            return leagueLinks;
+            return getDiscreteLeagueList(threads, leagueLinks);
         } catch (IOException e) {
             throw new RepositoryException(e.getMessage(), e);
         }
+    }
+
+    private List<List<String>> getDiscreteLeagueList(int threads, List<String> leagueLinks) {
+        List<List<String>> discreteList = new ArrayList<>();
+        while (true) {
+            if (leagueLinks.size() <= threads) {
+                discreteList.add(leagueLinks);
+                break;
+            }
+            discreteList.add(leagueLinks.subList(0, threads));
+            leagueLinks = leagueLinks.subList(threads, leagueLinks.size());
+        }
+        return discreteList;
     }
 }

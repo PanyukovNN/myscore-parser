@@ -8,60 +8,54 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class ConsoleLogger {
 
-    private static AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
+    private static AtomicLong programStartTime = new AtomicLong(System.currentTimeMillis());
 
     public static AtomicInteger totalWithNoCoef = new AtomicInteger(0);
 
     public static AtomicInteger totalPlayOffRecords = new AtomicInteger(0);
 
-    public static AtomicInteger totalRecords = new AtomicInteger(0);
+    private static AtomicInteger totalRecords = new AtomicInteger(0);
 
     public static AtomicLong blockStartTime;
 
     public static AtomicInteger blockRecords = new AtomicInteger(0);
 
-    public static AtomicInteger processedRecords = new AtomicInteger(0);
+    private static AtomicInteger processedRecords = new AtomicInteger(0);
 
     public static int blockNumber = 1;
 
-    public static AtomicInteger processedArchives = new AtomicInteger(0);
+    private static AtomicInteger processedArchives = new AtomicInteger(0);
 
     public static AtomicInteger blockArchives = new AtomicInteger(0);
 
-    public static AtomicInteger processedSeasons = new AtomicInteger(0);
+    private static AtomicInteger processedSeasons = new AtomicInteger(0);
 
     public static AtomicInteger blockLeagues = new AtomicInteger(0);
 
-    public static void totalSummarizing() {
-        long endTime = System.currentTimeMillis();
-        long seconds = (endTime - startTime.get()) / 1000;
-        long minutes = seconds / 60;
-        long houres = 0;
-        if (minutes > 60) {
-            houres = minutes / 60;
-            minutes = minutes % 60;
-        }
-        System.out.println("\nTotal time: "
-                + (houres == 0 ? "" : houres + "h. ")
-                + minutes + " min. "
-                + seconds % 60 + " sec.");
-        System.out.println("Total records: " + totalRecords);
-        System.out.println("Total records without coeffitients: " + totalWithNoCoef);
-        System.out.println("Total play-off records: " + totalPlayOffRecords);
+    public static synchronized void logArchive() {
+        String output = String.format("Processing block №%d archives: %d/%d",
+                blockNumber,
+                processedArchives.incrementAndGet(),
+                blockArchives.get());
+        writeInLine(StringUtils.repeat("\b", output.length()) + output);
+    }
+
+    public static synchronized void logSeason(int recordsSize) {
+        totalRecords.addAndGet(recordsSize);
+        blockRecords.addAndGet(recordsSize);
+        String output = String.format("Processing block №%d seasons: %d/%d",
+                blockNumber,
+                processedSeasons.incrementAndGet(),
+                blockLeagues.get());
+        writeInLine(StringUtils.repeat("\b", output.length()) + output);
     }
 
     public static synchronized void logRecord() {
-        String output = "Processing block №" + ConsoleLogger.blockNumber + " coefficients: " + new DecimalFormat("#00.00").format(((double) processedRecords.get() / (double) blockRecords.get()) * 100) + "%";
-        writeInLine(StringUtils.repeat("\b", output.length()) + output);
-    }
-
-    public static synchronized void logArchive() {
-        String output = "Processing block №" + blockNumber + " archives: " + processedArchives + " out of " + blockArchives;
-        writeInLine(StringUtils.repeat("\b", output.length()) + output);
-    }
-
-    public static synchronized void logSeason() {
-        String output = "Processing block №" + blockNumber + " seasons: " + processedSeasons + " out of " + blockLeagues;
+        String output = String.format("Processing block №%d coefficients: %d/%d (%s%%)",
+                blockNumber,
+                processedRecords.incrementAndGet(),
+                blockRecords.get(),
+                new DecimalFormat("#0.0").format(((double) processedRecords.get() / (double) blockRecords.get()) * 100).replace(",", "."));
         writeInLine(StringUtils.repeat("\b", output.length()) + output);
     }
 
@@ -77,8 +71,31 @@ public class ConsoleLogger {
     }
 
     static void blockSummarizing() {
-        System.out.println("\nBlock №" + (blockNumber - 1) + " is finished.");
-        System.out.println("------------------------------------------");
+        System.out.println(String.format("\nBlock №%d is completed in %s",
+                blockNumber - 1,
+                computeTime(blockStartTime.get())));
+        System.out.print(StringUtils.repeat("-", 50));
         processedRecords.set(0);
+    }
+
+    public static void totalSummarizing() {
+        System.out.println("\nTotal records: " + totalRecords);
+        System.out.println("Total play-off records: " + totalPlayOffRecords);
+        System.out.println("Total records without coeffitients: " + totalWithNoCoef);
+        System.out.println("Parsing completed in " + computeTime(programStartTime.get()));
+    }
+
+    private static String computeTime(long startTime) {
+        long endTime = System.currentTimeMillis();
+        long seconds = (endTime - startTime) / 1000;
+        long minutes = seconds / 60;
+        long houres = 0;
+        if (minutes > 60) {
+            houres = minutes / 60;
+            minutes = minutes % 60;
+        }
+        return (houres == 0 ? "" : houres + "h. ")
+                + minutes + " min. "
+                + seconds % 60 + " sec.";
     }
 }
