@@ -3,7 +3,7 @@ package com.zylex.myscoreparser.model;
 import java.time.LocalDateTime;
 import java.util.*;
 
-public class Record {
+public class Game {
 
     private String country;
 
@@ -25,7 +25,7 @@ public class Record {
 
     private Map<String, Coefficient> coefficients = new HashMap<>();
 
-    public Record(String country, String leagueName, String season, LocalDateTime gameDate, String firstCommand, String secondCommand, int firstBalls, int secondBalls, String coefHref) {
+    public Game(String country, String leagueName, String season, LocalDateTime gameDate, String firstCommand, String secondCommand, int firstBalls, int secondBalls, String coefHref) {
         this.country = country;
         this.leagueName = leagueName;
         this.season = season;
@@ -79,7 +79,7 @@ public class Record {
 
     @Override
     public String toString() {
-        return "Record{" +
+        return "Game{" +
                 "country='" + country + '\'' +
                 ", leagueName='" + leagueName + '\'' +
                 ", season='" + season + '\'' +

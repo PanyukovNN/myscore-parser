@@ -2,7 +2,7 @@ package com.zylex.myscoreparser.controller;
 
 import com.zylex.myscoreparser.exceptions.SaverException;
 import com.zylex.myscoreparser.model.Coefficient;
-import com.zylex.myscoreparser.model.Record;
+import com.zylex.myscoreparser.model.Game;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -20,11 +20,11 @@ public class Saver {
 
     private final String[] bookmakers = {"1XBET", "Winline", "Leon"};
 
-    public void processSaving(String dirName, List<Record> records) {
+    public void processSaving(String dirName, List<Game> games) {
         try {
             File file = createBlockFile(dirName);
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
-            writeToFile(records, writer);
+            writeToFile(games, writer);
             writer.close();
             ConsoleLogger.blockSummarizing();
         } catch (IOException e) {
@@ -49,23 +49,23 @@ public class Saver {
         return file;
     }
 
-    private void writeToFile(List<Record> records, BufferedWriter writer) throws IOException {
-        final String RECORD_BODY_FORMAT = "%s;%s;%s;%s;%s;%s;%d;%d";
+    private void writeToFile(List<Game> games, BufferedWriter writer) throws IOException {
+        final String GAME_BODY_FORMAT = "%s;%s;%s;%s;%s;%s;%d;%d";
         final String COEFFICIENT_FORMAT = ";%s;%s;%s;%s;%s;%s;%s";
-        for (Record record : records) {
-            if (!doesCoefficientExist(record)) {
+        for (Game game : games) {
+            if (!doesCoefficientExist(game)) {
                 continue;
             }
-            StringBuilder line = new StringBuilder(String.format(RECORD_BODY_FORMAT,
-                    record.getCountry(),
-                    record.getLeagueName(),
-                    record.getSeason(),
-                    DATE_FORMATTER.format(record.getGameDate()),
-                    record.getFirstCommand(),
-                    record.getSecondCommand(),
-                    record.getFirstBalls(),
-                    record.getSecondBalls()));
-            Map<String, Coefficient> coefficients = record.getCoefficients();
+            StringBuilder line = new StringBuilder(String.format(GAME_BODY_FORMAT,
+                    game.getCountry(),
+                    game.getLeagueName(),
+                    game.getSeason(),
+                    DATE_FORMATTER.format(game.getGameDate()),
+                    game.getFirstCommand(),
+                    game.getSecondCommand(),
+                    game.getFirstBalls(),
+                    game.getSecondBalls()));
+            Map<String, Coefficient> coefficients = game.getCoefficients();
             for (String bookmaker : bookmakers) {
                 if (coefficients.containsKey(bookmaker)) {
                     Coefficient coef = coefficients.get(bookmaker);
@@ -95,7 +95,7 @@ public class Saver {
         }
     }
 
-    private boolean doesCoefficientExist(Record record) {
-        return !record.getCoefficients().isEmpty();
+    private boolean doesCoefficientExist(Game game) {
+        return !game.getCoefficients().isEmpty();
     }
 }

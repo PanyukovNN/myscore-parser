@@ -12,25 +12,60 @@ public class ConsoleLogger {
 
     public static AtomicInteger totalWithNoCoef = new AtomicInteger(0);
 
-    public static AtomicInteger totalPlayOffRecords = new AtomicInteger(0);
+    public static AtomicInteger totalPlayOffGames = new AtomicInteger(0);
 
-    private static AtomicInteger totalRecords = new AtomicInteger(0);
+    private static AtomicInteger totalGames = new AtomicInteger(0);
 
     public static AtomicLong blockStartTime;
 
-    public static AtomicInteger blockRecords = new AtomicInteger(0);
+    private static AtomicInteger blockGames = new AtomicInteger(0);
 
-    private static AtomicInteger processedRecords = new AtomicInteger(0);
+    private static AtomicInteger processedGames = new AtomicInteger(0);
 
-    public static int blockNumber = 1;
+    static int blockNumber = 1;
 
     private static AtomicInteger processedArchives = new AtomicInteger(0);
 
-    public static AtomicInteger blockArchives = new AtomicInteger(0);
+    private static AtomicInteger blockArchives = new AtomicInteger(0);
 
     private static AtomicInteger processedSeasons = new AtomicInteger(0);
 
-    public static AtomicInteger blockLeagues = new AtomicInteger(0);
+    private static AtomicInteger blockLeagues = new AtomicInteger(0);
+
+    private static int threads;
+
+    private static int processedDrivers = 0;
+
+    public static synchronized void startLogMessage(LogType type, Integer arg) {
+        if (type == LogType.DRIVERS) {
+            threads = arg;
+            writeInLine("Starting chrome drivers: 0/" + arg);
+        } else if (type == LogType.ARCHIVES) {
+            blockArchives.set(arg);
+            writeInLine(String.format("\nProcessing block №%d archives: 0/%d",
+                    blockNumber,
+                    blockArchives.get()));
+        } else if (type == LogType.SEASONS) {
+            blockLeagues.set(arg);
+            writeInLine(String.format("\nProcessing block №%d seasons: 0/%d",
+                    blockNumber,
+                    blockLeagues.get()));
+        } else if (type == LogType.GAMES) {
+            writeInLine(String.format("\nProcessing block №%d coefficients: 0/%d (0.0%%)",
+                    blockNumber,
+                    blockGames.get()));
+        }
+    }
+
+    public static synchronized void logDriver() {
+        String output = String.format("Starting chrome drivers: %d/%d",
+                ++processedDrivers,
+                threads);
+        writeInLine(StringUtils.repeat("\b", output.length()) + output);
+        if (processedDrivers == threads) {
+            writeLineSeparator();
+        }
+    }
 
     public static synchronized void logArchive() {
         String output = String.format("Processing block №%d archives: %d/%d",
@@ -40,9 +75,9 @@ public class ConsoleLogger {
         writeInLine(StringUtils.repeat("\b", output.length()) + output);
     }
 
-    public static synchronized void logSeason(int recordsSize) {
-        totalRecords.addAndGet(recordsSize);
-        blockRecords.addAndGet(recordsSize);
+    public static synchronized void logSeason(int gamesSize) {
+        totalGames.addAndGet(gamesSize);
+        blockGames.addAndGet(gamesSize);
         String output = String.format("Processing block №%d seasons: %d/%d",
                 blockNumber,
                 processedSeasons.incrementAndGet(),
@@ -50,39 +85,31 @@ public class ConsoleLogger {
         writeInLine(StringUtils.repeat("\b", output.length()) + output);
     }
 
-    public static synchronized void logRecord() {
+    public static synchronized void logGame() {
         String output = String.format("Processing block №%d coefficients: %d/%d (%s%%)",
                 blockNumber,
-                processedRecords.incrementAndGet(),
-                blockRecords.get(),
-                new DecimalFormat("#0.0").format(((double) processedRecords.get() / (double) blockRecords.get()) * 100).replace(",", "."));
+                processedGames.incrementAndGet(),
+                blockGames.get(),
+                new DecimalFormat("#0.0").format(((double) processedGames.get() / (double) blockGames.get()) * 100).replace(",", "."));
         writeInLine(StringUtils.repeat("\b", output.length()) + output);
     }
 
-    public static void dropBlockLog() {
-        processedArchives.set(0);
-        processedSeasons.set(0);
-        processedRecords.set(0);
-        blockRecords.set(0);
-    }
-
-    public static synchronized void writeInLine(String message) {
-        System.out.print(message);
-    }
-
     static void blockSummarizing() {
-        System.out.println(String.format("\nBlock №%d is completed in %s",
+        writeInLine(String.format("\nBlock №%d is completed in %s",
                 blockNumber - 1,
                 computeTime(blockStartTime.get())));
-        System.out.print(StringUtils.repeat("-", 50));
-        processedRecords.set(0);
+        writeLineSeparator();
+        processedArchives.set(0);
+        processedSeasons.set(0);
+        processedGames.set(0);
+        blockGames.set(0);
     }
 
     public static void totalSummarizing() {
-        System.out.println("\nTotal records: " + totalRecords);
-        System.out.println("Total play-off records: " + totalPlayOffRecords);
-        System.out.println("Total records without coeffitients: " + totalWithNoCoef);
-        System.out.println("Parsing completed in " + computeTime(programStartTime.get()));
+        writeInLine(String.format("\nTotal games: %d\n", totalGames.get()));
+        writeInLine(String.format("Total play-off games: %d\n", totalPlayOffGames.get()));
+        writeInLine(String.format("Total games without coeffitients: %d\n", totalWithNoCoef.get()));
+        writeInLine(String.format("Parsing completed in %s", computeTime(programStartTime.get())));
     }
 
     private static String computeTime(long startTime) {
@@ -97,5 +124,13 @@ public class ConsoleLogger {
         return (houres == 0 ? "" : houres + "h. ")
                 + minutes + " min. "
                 + seconds % 60 + " sec.";
+    }
+
+    private static void writeLineSeparator() {
+        writeInLine("\n" + StringUtils.repeat("-", 50));
+    }
+
+    private static synchronized void writeInLine(String message) {
+        System.out.print(message);
     }
 }

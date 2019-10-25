@@ -1,7 +1,7 @@
 package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
-import org.apache.commons.lang3.StringUtils;
+import com.zylex.myscoreparser.controller.LogType;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -22,7 +22,7 @@ public class DriverFactory {
     }
 
     private void initiateDrivers() {
-        ConsoleLogger.writeInLine("Starting chrome drivers: 0/" + threads);
+        ConsoleLogger.startLogMessage(LogType.DRIVERS, threads);
         for (int i = 0; i < threads; i++) {
             ChromeOptions options = new ChromeOptions();
             options.addArguments("--window-size=1200,600");
@@ -30,12 +30,8 @@ public class DriverFactory {
             WebDriver driver = new ChromeDriver(options);
             driver.manage().timeouts().pageLoadTimeout(600, TimeUnit.SECONDS);
             drivers.add(driver);
-            String output = String.format("Starting chrome drivers: %d/%d",
-                    (i + 1),
-                    threads);
-            ConsoleLogger.writeInLine(StringUtils.repeat("\b", output.length()) + output);
+            ConsoleLogger.logDriver();
         }
-        ConsoleLogger.writeInLine("\n" + StringUtils.repeat("-", 50));
     }
 
     int getThreads() {

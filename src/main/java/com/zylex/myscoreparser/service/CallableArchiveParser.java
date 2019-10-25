@@ -32,7 +32,9 @@ public class CallableArchiveParser implements Callable<List<String>> {
             WebDriverWait wait = new WebDriverWait(driver, 180);
             driver.navigate().to(String.format("https://www.myscore.ru/football/%s/archive/", countryLeague));
             wait.until(webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-            return parseArchive();
+            List<String> archiveLinks = parseArchive();
+            ConsoleLogger.logArchive();
+            return archiveLinks;
         } catch (InterruptedException e) {
             throw new ArchiveParserException(e.getMessage(), e);
         } finally {
@@ -41,7 +43,6 @@ public class CallableArchiveParser implements Callable<List<String>> {
     }
 
     private List<String> parseArchive() {
-        ConsoleLogger.logArchive();
         String pageSource = driver.getPageSource();
         Document doc = Jsoup.parse(pageSource);
         Elements archiveElements = doc.select("div.leagueTable__season > div.leagueTable__seasonName > a");

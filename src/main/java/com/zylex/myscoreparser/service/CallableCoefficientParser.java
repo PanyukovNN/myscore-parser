@@ -3,7 +3,7 @@ package com.zylex.myscoreparser.service;
 import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.exceptions.CoefficientParserException;
 import com.zylex.myscoreparser.model.Coefficient;
-import com.zylex.myscoreparser.model.Record;
+import com.zylex.myscoreparser.model.Game;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -18,44 +18,44 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-public class CallableCoefficientParser implements Callable<List<Record>> {
+public class CallableCoefficientParser implements Callable<List<Game>> {
 
     private WebDriver driver;
 
     private WebDriverWait wait;
 
-    private List<Record> records;
+    private List<Game> games;
 
-    private int playOffRecords = 0;
+    private int playOffGames = 0;
 
-    private int noCoefficientRecords = 0;
+    private int noCoefficientGames = 0;
 
     private DriverFactory driverFactory;
 
-    CallableCoefficientParser(DriverFactory driverFactory, List<Record> records) {
-        this.records = records;
+    CallableCoefficientParser(DriverFactory driverFactory, List<Game> games) {
+        this.games = games;
         this.driverFactory = driverFactory;
     }
 
-    public List<Record> call() {
+    public List<Game> call() {
         try {
             driver = driverFactory.getDriver();
             wait = new WebDriverWait(driver, 2);
             processCoefficientParsing();
-            return records;
+            return games;
         } catch (InterruptedException e) {
             throw new CoefficientParserException(e.getMessage(), e);
         } finally {
             driverFactory.addDriverToQueue(driver);
-            ConsoleLogger.totalPlayOffRecords.addAndGet(playOffRecords);
-            ConsoleLogger.totalWithNoCoef.addAndGet(noCoefficientRecords);
+            ConsoleLogger.totalPlayOffGames.addAndGet(playOffGames);
+            ConsoleLogger.totalWithNoCoef.addAndGet(noCoefficientGames);
         }
     }
 
     private void processCoefficientParsing() {
-        for (Record record : records) {
-            ConsoleLogger.logRecord();
-            driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#odds-comparison;1x2-odds;full-time", record.getCoefHref()));
+        for (Game game : games) {
+            ConsoleLogger.logGame();
+            driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#odds-comparison;1x2-odds;full-time", game.getCoefHref()));
             if (!coefficientTableExists()) {
                 continue;
             }
@@ -64,7 +64,7 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
             if (isPlayOff(document)) {
                 continue;
             }
-            parseCoefficients(record, document);
+            parseCoefficients(game, document);
         }
     }
 
@@ -76,7 +76,7 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
             }
             wait.until(ExpectedConditions.presenceOfElementLocated(By.id("odds_1x2")));
         } catch (TimeoutException | InterruptedException ignore) {
-            noCoefficientRecords++;
+            noCoefficientGames++;
             return false;
         }
         return true;
@@ -85,22 +85,22 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
     private boolean isPlayOff(Document document) {
         String league = document.select("span.description__country > a").text();
         if (league.contains("плей-офф")) {
-            playOffRecords++;
+            playOffGames++;
             return true;
         }
         return false;
     }
 
-    private void parseCoefficients(Record record, Document document) {
-        Elements coef1x2Records = document.select("div#block-1x2-ft > table#odds_1x2 > tbody > tr");
-        Elements coefDchRecords = document.select("div#block-double-chance-ft > table#odds_dch > tbody > tr");
-        Map<String, Coefficient> coefficients = record.getCoefficients();
-        process1x2Coefficients(coef1x2Records, coefficients);
-        processDchCoefficients(coefDchRecords, coefficients);
+    private void parseCoefficients(Game game, Document document) {
+        Elements coef1x2Games = document.select("div#block-1x2-ft > table#odds_1x2 > tbody > tr");
+        Elements coefDchGames = document.select("div#block-double-chance-ft > table#odds_dch > tbody > tr");
+        Map<String, Coefficient> coefficients = game.getCoefficients();
+        process1x2Coefficients(coef1x2Games, coefficients);
+        processDchCoefficients(coefDchGames, coefficients);
     }
 
-    private void process1x2Coefficients(Elements coef1x2Records, Map<String, Coefficient> coefficients) {
-        for (Element element : coef1x2Records) {
+    private void process1x2Coefficients(Elements coef1x2Games, Map<String, Coefficient> coefficients) {
+        for (Element element : coef1x2Games) {
             String bookmaker = element.select("td.bookmaker > div > a").first().attr("title");
             bookmaker = fixBookmakerName(bookmaker);
             if (checkBookmaker(bookmaker)) {
@@ -116,8 +116,8 @@ public class CallableCoefficientParser implements Callable<List<Record>> {
         }
     }
 
-    private void processDchCoefficients(Elements coefDchRecords, Map<String, Coefficient> coefficients) {
-        for (Element element : coefDchRecords) {
+    private void processDchCoefficients(Elements coefDchGames, Map<String, Coefficient> coefficients) {
+        for (Element element : coefDchGames) {
             String bookmaker = element.select("td.bookmaker > div > a").first().attr("title");
             bookmaker = fixBookmakerName(bookmaker);
             if (checkBookmaker(bookmaker)) {

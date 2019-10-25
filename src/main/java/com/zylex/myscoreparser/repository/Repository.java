@@ -1,11 +1,17 @@
 package com.zylex.myscoreparser.repository;
 
+import com.ibatis.common.jdbc.ScriptRunner;
 import com.zylex.myscoreparser.exceptions.RepositoryException;
 import com.zylex.myscoreparser.service.DriverFactory;
 
 import java.io.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Repository {
 

@@ -2,7 +2,7 @@ package com.zylex.myscoreparser;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.controller.Saver;
-import com.zylex.myscoreparser.model.Record;
+import com.zylex.myscoreparser.model.Game;
 import com.zylex.myscoreparser.repository.Repository;
 import com.zylex.myscoreparser.service.DriverFactory;
 import com.zylex.myscoreparser.service.ParseProcessor;
@@ -22,8 +22,8 @@ public class Main {
         String dirName = saver.createDirectory();
         try {
             repository.readDiscreteLeaguesFromFile(threads).forEach(leagueList -> {
-                List<Record> records = parseProcessor.process(driverFactory, leagueList);
-                saver.processSaving(dirName, records);
+                List<Game> games = parseProcessor.process(driverFactory, leagueList);
+                saver.processSaving(dirName, games);
             });
         } finally {
             driverFactory.quitDrivers();
