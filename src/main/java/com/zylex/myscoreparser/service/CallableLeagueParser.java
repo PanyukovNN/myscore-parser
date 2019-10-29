@@ -3,6 +3,7 @@ package com.zylex.myscoreparser.service;
 import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.exceptions.LeagueParserException;
 import com.zylex.myscoreparser.model.Game;
+import com.zylex.myscoreparser.repository.Repository;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -28,8 +29,11 @@ public class CallableLeagueParser implements Callable<List<Game>> {
 
     private DriverManager driverManager;
 
-    CallableLeagueParser(DriverManager driverManager, String leagueLink) {
+    private Repository repository;
+
+    CallableLeagueParser(DriverManager driverManager, Repository repository, String leagueLink) {
         this.driverManager = driverManager;
+        this.repository = repository;
         this.leagueLink = leagueLink;
     }
 
@@ -49,10 +53,23 @@ public class CallableLeagueParser implements Callable<List<Game>> {
 
     private List<Game> processLeagueParsing(String leagueLink) throws InterruptedException {
         driver.navigate().to(String.format("https://www.myscore.ru/football/%sresults/", leagueLink));
+        String leagueSeason = findLeagueSeason();
+        if (repository.getLeagueSeasons().contains(leagueSeason)) {
+            ConsoleLogger.allInArchive = true;
+            return new ArrayList<>();
+        }
         showMore(driver);
         String pageSource = driver.getPageSource();
         Document document = Jsoup.parse(pageSource);
         return parseGames(document);
+    }
+
+    private String findLeagueSeason() throws InterruptedException {
+        Thread.sleep(1500);
+        String country = driver.findElement(By.className("event__title--type")).getText();
+        String league = driver.findElement(By.className("teamHeader__name")).getText();
+        String season = driver.findElement(By.className("teamHeader__text")).getText().replace("/", "");
+        return String.format("%s_%s_%s", country, league, season);
     }
 
     private List<Game> parseGames(Document document) {
@@ -72,6 +89,10 @@ public class CallableLeagueParser implements Callable<List<Game>> {
             int secondBalls = Integer.parseInt(scores[1]);
             String coefHref = gameElement.id().replace("g_1_", "");
             Game game = new Game(country, league, season, gameDateTime, firstCommand, secondCommand, firstBalls, secondBalls, coefHref);
+            if (repository.getArchiveGames().contains(game)) {
+                ConsoleLogger.blockGamesArchiveExist.incrementAndGet();
+                continue;
+            }
             games.add(game);
         }
         return games;

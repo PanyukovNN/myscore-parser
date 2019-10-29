@@ -27,7 +27,7 @@ public class ConsoleLogger {
 
     private static AtomicInteger processedGames = new AtomicInteger(0);
 
-    static int blockNumber = 1;
+    private static int blockNumber = 1;
 
     private static AtomicInteger processedArchives = new AtomicInteger(0);
 
@@ -40,6 +40,14 @@ public class ConsoleLogger {
     private static int threads;
 
     private static int processedDrivers = 0;
+
+    public static AtomicInteger blockPlayOffGames = new AtomicInteger(0);
+
+    public static AtomicInteger blockNoCoefficientGames = new AtomicInteger(0);
+
+    public static AtomicInteger blockGamesArchiveExist = new AtomicInteger(0);
+
+    public static boolean allInArchive = false;
 
     static {
         @SuppressWarnings("unchecked")
@@ -65,8 +73,9 @@ public class ConsoleLogger {
                     blockNumber,
                     blockLeagues.get()));
         } else if (type == LogType.GAMES) {
-            writeInLine(String.format("\nProcessing block №%d coefficients: 0/%d (0.0%%)",
+            writeInLine(String.format("\nProcessing block №%d coefficients: 0/%d (0.0%%); Exist in archive: 0/%d",
                     blockNumber,
+                    blockGames.get(),
                     blockGames.get()));
         }
     }
@@ -100,30 +109,43 @@ public class ConsoleLogger {
     }
 
     public static synchronized void logGame() {
-        String output = String.format("Processing block №%d coefficients: %d/%d (%s%%)",
+        String output = String.format("Processing block №%d coefficients: %d/%d (%s%%); Exist in archive: %d/%d",
                 blockNumber,
                 processedGames.incrementAndGet(),
-                blockGames.get(),
-                new DecimalFormat("#0.0").format(((double) processedGames.get() / (double) blockGames.get()) * 100).replace(",", "."));
+                blockGames.get() - blockGamesArchiveExist.get(),
+                new DecimalFormat("#0.0").format(((double) processedGames.get() / (double) (blockGames.get() - blockGamesArchiveExist.get())) * 100).replace(",", "."),
+                blockGamesArchiveExist.get(),
+                blockGames.get());
         writeInLine(StringUtils.repeat("\b", output.length()) + output);
     }
 
-    static void blockSummarizing() {
-        writeInLine(String.format("\nBlock №%d is completed in %s",
-                blockNumber - 1,
-                computeTime(blockStartTime.get())));
+    public static void blockSummarizing() {
+        if (allInArchive) {
+            writeInLine(String.format("\nBlock №%d is already in the archive.", blockNumber));
+        } else {
+            writeInLine(String.format("\nBlock №%d is completed in %s",
+                    blockNumber,
+                    computeTime(blockStartTime.get())));
+            writeInLine(String.format("\nBlock №%d play-off games: %d", blockNumber, blockPlayOffGames.get()));
+            writeInLine(String.format("\nBlock №%d games with no coefficients: %d", blockNumber, blockNoCoefficientGames.get()));
+        }
         writeLineSeparator();
+        blockNumber++;
         processedArchives.set(0);
         processedSeasons.set(0);
         processedGames.set(0);
         blockGames.set(0);
+        blockGamesArchiveExist.set(0);
+        blockPlayOffGames.set(0);
+        blockNoCoefficientGames.set(0);
+        allInArchive = false;
     }
 
     public static void totalSummarizing() {
         writeInLine(String.format("\nTotal games: %d\n", totalGames.get()));
         writeInLine(String.format("Total play-off games: %d\n", totalPlayOffGames.get()));
-        writeInLine(String.format("Total games without coeffitients: %d\n", totalWithNoCoef.get()));
-        writeInLine(String.format("Parsing completed in %s", computeTime(programStartTime.get())));
+        writeInLine(String.format("Total games with no coefficients: %d\n", totalWithNoCoef.get()));
+        writeInLine(String.format("Parsing completed in %s\n", computeTime(programStartTime.get())));
     }
 
     private static String computeTime(long startTime) {
@@ -144,7 +166,7 @@ public class ConsoleLogger {
         writeInLine("\n" + StringUtils.repeat("-", 50));
     }
 
-    private static synchronized void writeInLine(String message) {
+    public static synchronized void writeInLine(String message) {
         System.out.print(message);
     }
 }

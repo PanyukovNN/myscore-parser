@@ -73,8 +73,30 @@ public class Game {
         return coefHref;
     }
 
+    public void setCoefHref(String coefHref) {
+        this.coefHref = coefHref;
+    }
+
     public Map<String, Coefficient> getCoefficients() {
         return coefficients;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Game game = (Game) o;
+        return country.equals(game.country) &&
+                leagueName.equals(game.leagueName) &&
+                season.equals(game.season) &&
+                gameDate.equals(game.gameDate) &&
+                firstCommand.equals(game.firstCommand) &&
+                secondCommand.equals(game.secondCommand);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(country, leagueName, season, gameDate, firstCommand, secondCommand);
     }
 
     @Override

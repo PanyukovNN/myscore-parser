@@ -53,7 +53,7 @@ public class DriverManager {
         drivers.add(driver);
     }
 
-    public void quitDrivers() {
+    void quitDrivers() {
         for (WebDriver driver : drivers) {
             driver.quit();
         }

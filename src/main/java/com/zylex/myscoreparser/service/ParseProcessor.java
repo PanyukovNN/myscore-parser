@@ -2,8 +2,10 @@ package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.controller.LogType;
+import com.zylex.myscoreparser.controller.Saver;
 import com.zylex.myscoreparser.exceptions.ParseProcessorException;
 import com.zylex.myscoreparser.model.Game;
+import com.zylex.myscoreparser.repository.Repository;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -19,9 +21,25 @@ public class ParseProcessor {
 
     private ExecutorService service;
 
-    public List<Game> process(DriverManager driverManager, List<String> leagueSeasonLinks) {
+    private Repository repository;
+
+    public void process(DriverManager driverManager, Repository repository) {
         this.driverManager = driverManager;
         this.service = Executors.newFixedThreadPool(driverManager.getThreads());
+        this.repository = repository;
+        try {
+            List<List<String>> leagueSeasonLinksList = repository.readDiscreteLeaguesFromFile(driverManager.getThreads());
+            for (List<String> leagueSeasonLinks : leagueSeasonLinksList) {
+                processBlock(leagueSeasonLinks);
+            }
+        } finally {
+            service.shutdown();
+            driverManager.quitDrivers();
+            new Saver().processArchiveSaving(repository);
+        }
+    }
+
+    private void processBlock(List<String> leagueSeasonLinks) {
         ConsoleLogger.blockStartTime = new AtomicLong(System.currentTimeMillis());
         try {
             ConsoleLogger.startLogMessage(LogType.ARCHIVES, leagueSeasonLinks.size());
@@ -29,11 +47,11 @@ public class ParseProcessor {
             ConsoleLogger.startLogMessage(LogType.SEASONS, archiveLinks.size());
             List<List<Game>> leagueGames = processLeagueGames(archiveLinks);
             ConsoleLogger.startLogMessage(LogType.GAMES, null);
-            return processCoefficients(leagueGames);
+            processCoefficients(leagueGames);
         } catch (InterruptedException | ExecutionException e) {
             throw new ParseProcessorException(e.getMessage(), e);
         } finally {
-            service.shutdown();
+            ConsoleLogger.blockSummarizing();
         }
     }
 
@@ -42,13 +60,8 @@ public class ParseProcessor {
         for (String countryLeague : leagueSeasonLinks) {
             callableArchiveParsers.add(new CallableArchiveParser(driverManager, countryLeague));
         }
-        List<Future<List<String>>> futureArchiveParsers = service.invokeAll(callableArchiveParsers);
-        return convertFutureArchiveLinks(futureArchiveParsers);
-    }
-
-    private List<String> convertFutureArchiveLinks(List<Future<List<String>>> futureArchiveParsers) throws InterruptedException, ExecutionException {
         List<String> archiveLinks = new ArrayList<>();
-        for (Future<List<String>> future : futureArchiveParsers) {
+        for (Future<List<String>> future : service.invokeAll(callableArchiveParsers)) {
             archiveLinks.addAll(future.get());
         }
         return archiveLinks;
@@ -57,44 +70,39 @@ public class ParseProcessor {
     private List<List<Game>> processLeagueGames(List<String> archiveLinks) throws InterruptedException, ExecutionException {
         List<CallableLeagueParser> callableLeagueParsers = new ArrayList<>();
         for (String archiveLink : archiveLinks) {
-            callableLeagueParsers.add(new CallableLeagueParser(driverManager, archiveLink));
+            callableLeagueParsers.add(new CallableLeagueParser(driverManager, repository, archiveLink));
         }
         List<Future<List<Game>>> futureLeagueGames = service.invokeAll(callableLeagueParsers);
-        List<List<Game>> gamesLinks = convertFutureLeagueGames(futureLeagueGames);
-        Comparator<List<Game>> sizeComparator = (o1, o2) -> Integer.compare(o2.size(), o1.size());
-        Comparator<List<Game>> seasonComparator = Comparator.comparingInt(this::getSeasonStartYear);
-        return gamesLinks.stream()
-                .sorted(sizeComparator.thenComparing(seasonComparator))
-                .collect(Collectors.toList());
-    }
-
-    private List<List<Game>> convertFutureLeagueGames(List<Future<List<Game>>> futureLeagueGames) throws InterruptedException, ExecutionException {
         List<List<Game>> gamesLinks = new ArrayList<>();
         for (Future<List<Game>> futureLeagueGame : futureLeagueGames) {
             gamesLinks.add(futureLeagueGame.get());
         }
+        return sortGameLinks(gamesLinks);
+    }
+
+    private List<List<Game>> sortGameLinks(List<List<Game>> gamesLinks) {
+        Comparator<List<Game>> sizeComparator = (o1, o2) -> Integer.compare(o2.size(), o1.size());
+        Comparator<List<Game>> seasonComparator = Comparator.comparingInt(this::getSeasonStartYear);
+        gamesLinks = gamesLinks.stream()
+                .sorted(sizeComparator.thenComparing(seasonComparator))
+                .collect(Collectors.toList());
         return gamesLinks;
     }
 
     private int getSeasonStartYear(List<Game> games) {
+        if (games.isEmpty()) {
+            return 0;
+        }
         return Integer.parseInt(games.get(0).getSeason().substring(0, 4));
     }
 
-    private List<Game> processCoefficients(List<List<Game>> gamesList) throws InterruptedException, ExecutionException {
+    private void processCoefficients(List<List<Game>> gamesList) throws InterruptedException, ExecutionException {
         List<CallableCoefficientParser> callableCoefficientParsers = new ArrayList<>();
         for (List<Game> games : gamesList) {
-            callableCoefficientParsers.add(new CallableCoefficientParser(driverManager, games));
+            callableCoefficientParsers.add(new CallableCoefficientParser(driverManager, repository.getArchiveGames(), games));
         }
-        List<Future<List<Game>>> futureGamesLists = service.invokeAll(callableCoefficientParsers);
-        return processTotalGames(futureGamesLists);
-    }
-
-    private List<Game> processTotalGames(List<Future<List<Game>>> futureGamesLists) throws InterruptedException, ExecutionException {
-        List<Game> games = new ArrayList<>();
-        for (Future<List<Game>> futureGamesList : futureGamesLists) {
-            List<Game> gameList = futureGamesList.get();
-            games.addAll(gameList);
+        for (Future<List<Game>> future : service.invokeAll(callableCoefficientParsers)) {
+            future.get();
         }
-        return games;
     }
 }

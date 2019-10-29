@@ -17,6 +17,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 public class CallableCoefficientParser implements Callable<List<Game>> {
 
@@ -32,8 +33,11 @@ public class CallableCoefficientParser implements Callable<List<Game>> {
 
     private DriverManager driverManager;
 
-    CallableCoefficientParser(DriverManager driverManager, List<Game> games) {
+    private List<Game> archiveGames;
+
+    CallableCoefficientParser(DriverManager driverManager, List<Game> archiveGames, List<Game> games) {
         this.games = games;
+        this.archiveGames = archiveGames;
         this.driverManager = driverManager;
     }
 
@@ -49,6 +53,8 @@ public class CallableCoefficientParser implements Callable<List<Game>> {
             driverManager.addDriverToQueue(driver);
             ConsoleLogger.totalPlayOffGames.addAndGet(playOffGames);
             ConsoleLogger.totalWithNoCoef.addAndGet(noCoefficientGames);
+            ConsoleLogger.blockPlayOffGames.set(playOffGames);
+            ConsoleLogger.blockNoCoefficientGames.set(noCoefficientGames);
         }
     }
 
@@ -97,6 +103,10 @@ public class CallableCoefficientParser implements Callable<List<Game>> {
         Map<String, Coefficient> coefficients = game.getCoefficients();
         process1x2Coefficients(coef1x2Games, coefficients);
         processDchCoefficients(coefDchGames, coefficients);
+
+        if (!coefficients.isEmpty()) {
+            archiveGames.add(game);
+        }
     }
 
     private void process1x2Coefficients(Elements coef1x2Games, Map<String, Coefficient> coefficients) {

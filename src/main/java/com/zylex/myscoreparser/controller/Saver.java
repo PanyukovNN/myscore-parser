@@ -3,11 +3,11 @@ package com.zylex.myscoreparser.controller;
 import com.zylex.myscoreparser.exceptions.SaverParserException;
 import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Game;
+import com.zylex.myscoreparser.repository.Repository;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -16,33 +16,23 @@ public class Saver {
 
     private final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd;HH:mm");
 
-    private final DateTimeFormatter FILE_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm");
-
     private final String[] bookmakers = {"1XBET", "Winline", "Leon"};
 
-    public void processSaving(String dirName, List<Game> games) {
+    public synchronized void processArchiveSaving(Repository repository) {
         try {
-            File file = createBlockFile(dirName);
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
-            writeToFile(games, writer);
-            writer.close();
-            ConsoleLogger.blockSummarizing();
+            repository.sortArchive();
+            File file = createArchiveFile();
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, false), StandardCharsets.UTF_8))) {
+                writeToFile(repository.getArchiveGames(), writer);
+            }
         } catch (IOException e) {
             throw new SaverParserException(e.getMessage(), e);
         }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public String createDirectory() {
-        String dirName = FILE_DATE_FORMATTER.format(LocalDateTime.now());
-        new File("results").mkdir();
-        new File("results/" + dirName).mkdir();
-        return dirName;
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private File createBlockFile(String dirName) throws IOException {
-        File file = new File("results/" + dirName + "/results" + ConsoleLogger.blockNumber++ + ".csv");
+    private File createArchiveFile() throws IOException {
+        File file = new File("results/total_statistics.csv");
         if (!file.exists()) {
             file.createNewFile();
         }
@@ -78,10 +68,10 @@ public class Saver {
                     formatDouble(coef.getDch1X()),
                     formatDouble(coef.getDchX2())));
                 } else {
-                    line.append(";-;-;-;-;-;-;-");
+                    line.append(";-;-;-;-;-;-;-;-");
                 }
             }
-            line.append("\n");
+            line.append(String.format(";%s\n", game.getCoefHref()));
             writer.write(line.toString());
         }
     }
