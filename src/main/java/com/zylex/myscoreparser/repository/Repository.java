@@ -1,23 +1,17 @@
 package com.zylex.myscoreparser.repository;
 
-import com.ibatis.common.jdbc.ScriptRunner;
-import com.zylex.myscoreparser.exceptions.RepositoryException;
-import com.zylex.myscoreparser.service.DriverFactory;
+import com.zylex.myscoreparser.exceptions.RepositoryParserException;
+import com.zylex.myscoreparser.service.DriverManager;
 
 import java.io.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Repository {
 
     public List<List<String>> readDiscreteLeaguesFromFile(int threads) {
         try {
-            InputStream inputStream = DriverFactory.class.getResourceAsStream("/leagues.txt");
+            InputStream inputStream = DriverManager.class.getResourceAsStream("/leagues.txt");
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             List<String> leagueLinks = new ArrayList<>();
             String line;
@@ -28,7 +22,7 @@ public class Repository {
             }
             return getDiscreteLeagueList(threads, leagueLinks);
         } catch (IOException e) {
-            throw new RepositoryException(e.getMessage(), e);
+            throw new RepositoryParserException(e.getMessage(), e);
         }
     }
 

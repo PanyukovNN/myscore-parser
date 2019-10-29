@@ -1,7 +1,7 @@
 package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
-import com.zylex.myscoreparser.exceptions.ArchiveParserException;
+import com.zylex.myscoreparser.exceptions.ArchiveParserParserException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -19,16 +19,16 @@ public class CallableArchiveParser implements Callable<List<String>> {
 
     private String countryLeague;
 
-    private DriverFactory driverFactory;
+    private DriverManager driverManager;
 
-    CallableArchiveParser(DriverFactory driverFactory, String countryLeagues) {
-        this.driverFactory = driverFactory;
+    CallableArchiveParser(DriverManager driverManager, String countryLeagues) {
+        this.driverManager = driverManager;
         this.countryLeague = countryLeagues;
     }
 
     public List<String> call() {
         try {
-            driver = driverFactory.getDriver();
+            driver = driverManager.getDriver();
             WebDriverWait wait = new WebDriverWait(driver, 180);
             driver.navigate().to(String.format("https://www.myscore.ru/football/%s/archive/", countryLeague));
             wait.until(webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
@@ -36,9 +36,9 @@ public class CallableArchiveParser implements Callable<List<String>> {
             ConsoleLogger.logArchive();
             return archiveLinks;
         } catch (InterruptedException e) {
-            throw new ArchiveParserException(e.getMessage(), e);
+            throw new ArchiveParserParserException(e.getMessage(), e);
         } finally {
-            driverFactory.addDriverToQueue(driver);
+            driverManager.addDriverToQueue(driver);
         }
     }
 

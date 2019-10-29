@@ -2,7 +2,7 @@ package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.controller.LogType;
-import com.zylex.myscoreparser.exceptions.ParseProcessorException;
+import com.zylex.myscoreparser.exceptions.ParseProcessorParserException;
 import com.zylex.myscoreparser.model.Game;
 
 import java.util.*;
@@ -15,13 +15,13 @@ import java.util.stream.Collectors;
 
 public class ParseProcessor {
 
-    private DriverFactory driverFactory;
+    private DriverManager driverManager;
 
     private ExecutorService service;
 
-    public List<Game> process(DriverFactory driverFactory, List<String> leagueSeasonLinks) {
-        this.driverFactory = driverFactory;
-        this.service = Executors.newFixedThreadPool(driverFactory.getThreads());
+    public List<Game> process(DriverManager driverManager, List<String> leagueSeasonLinks) {
+        this.driverManager = driverManager;
+        this.service = Executors.newFixedThreadPool(driverManager.getThreads());
         ConsoleLogger.blockStartTime = new AtomicLong(System.currentTimeMillis());
         try {
             ConsoleLogger.startLogMessage(LogType.ARCHIVES, leagueSeasonLinks.size());
@@ -31,7 +31,7 @@ public class ParseProcessor {
             ConsoleLogger.startLogMessage(LogType.GAMES, null);
             return processCoefficients(leagueGames);
         } catch (InterruptedException | ExecutionException e) {
-            throw new ParseProcessorException(e.getMessage(), e);
+            throw new ParseProcessorParserException(e.getMessage(), e);
         } finally {
             service.shutdown();
         }
@@ -40,7 +40,7 @@ public class ParseProcessor {
     private List<String> processArchiveLinks(List<String> leagueSeasonLinks) throws InterruptedException, ExecutionException {
         List<CallableArchiveParser> callableArchiveParsers = new ArrayList<>();
         for (String countryLeague : leagueSeasonLinks) {
-            callableArchiveParsers.add(new CallableArchiveParser(driverFactory, countryLeague));
+            callableArchiveParsers.add(new CallableArchiveParser(driverManager, countryLeague));
         }
         List<Future<List<String>>> futureArchiveParsers = service.invokeAll(callableArchiveParsers);
         return convertFutureArchiveLinks(futureArchiveParsers);
@@ -57,7 +57,7 @@ public class ParseProcessor {
     private List<List<Game>> processLeagueGames(List<String> archiveLinks) throws InterruptedException, ExecutionException {
         List<CallableLeagueParser> callableLeagueParsers = new ArrayList<>();
         for (String archiveLink : archiveLinks) {
-            callableLeagueParsers.add(new CallableLeagueParser(driverFactory, archiveLink));
+            callableLeagueParsers.add(new CallableLeagueParser(driverManager, archiveLink));
         }
         List<Future<List<Game>>> futureLeagueGames = service.invokeAll(callableLeagueParsers);
         List<List<Game>> gamesLinks = convertFutureLeagueGames(futureLeagueGames);
@@ -83,7 +83,7 @@ public class ParseProcessor {
     private List<Game> processCoefficients(List<List<Game>> gamesList) throws InterruptedException, ExecutionException {
         List<CallableCoefficientParser> callableCoefficientParsers = new ArrayList<>();
         for (List<Game> games : gamesList) {
-            callableCoefficientParsers.add(new CallableCoefficientParser(driverFactory, games));
+            callableCoefficientParsers.add(new CallableCoefficientParser(driverManager, games));
         }
         List<Future<List<Game>>> futureGamesLists = service.invokeAll(callableCoefficientParsers);
         return processTotalGames(futureGamesLists);

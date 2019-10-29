@@ -1,10 +1,15 @@
 package com.zylex.myscoreparser.controller;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.text.DecimalFormat;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
 
 public class ConsoleLogger {
 
@@ -35,6 +40,15 @@ public class ConsoleLogger {
     private static int threads;
 
     private static int processedDrivers = 0;
+
+    static {
+        @SuppressWarnings("unchecked")
+        List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
+        loggers.add(LogManager.getRootLogger());
+        loggers.forEach(logger -> logger.setLevel(org.apache.log4j.Level.OFF));
+        System.setProperty("webdriver.chrome.silentOutput", "true");
+        java.util.logging.Logger.getLogger("org.openqa.selenium").setLevel(Level.OFF);
+    }
 
     public static synchronized void startLogMessage(LogType type, Integer arg) {
         if (type == LogType.DRIVERS) {

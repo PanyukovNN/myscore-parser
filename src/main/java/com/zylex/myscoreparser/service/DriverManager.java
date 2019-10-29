@@ -2,6 +2,7 @@ package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.controller.LogType;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -10,18 +11,19 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
-public class DriverFactory {
+public class DriverManager {
 
     private int threads;
 
     private Queue<WebDriver> drivers = new ConcurrentLinkedQueue<>();
 
-    public DriverFactory(int threads) {
+    public DriverManager(int threads) {
         this.threads = threads;
         initiateDrivers();
     }
 
     private void initiateDrivers() {
+        WebDriverManager.chromedriver().version("77.0.3865.40").setup();
         ConsoleLogger.startLogMessage(LogType.DRIVERS, threads);
         for (int i = 0; i < threads; i++) {
             ChromeOptions options = new ChromeOptions();

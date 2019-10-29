@@ -1,6 +1,6 @@
 package com.zylex.myscoreparser.controller;
 
-import com.zylex.myscoreparser.exceptions.SaverException;
+import com.zylex.myscoreparser.exceptions.SaverParserException;
 import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Game;
 
@@ -28,7 +28,7 @@ public class Saver {
             writer.close();
             ConsoleLogger.blockSummarizing();
         } catch (IOException e) {
-            throw new SaverException(e.getMessage(), e);
+            throw new SaverParserException(e.getMessage(), e);
         }
     }
 

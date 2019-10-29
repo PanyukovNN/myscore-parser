@@ -1,7 +1,7 @@
 package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
-import com.zylex.myscoreparser.exceptions.LeagueParserException;
+import com.zylex.myscoreparser.exceptions.LeagueParserParserException;
 import com.zylex.myscoreparser.model.Game;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -26,24 +26,24 @@ public class CallableLeagueParser implements Callable<List<Game>> {
 
     private final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
-    private DriverFactory driverFactory;
+    private DriverManager driverManager;
 
-    CallableLeagueParser(DriverFactory driverFactory, String leagueLink) {
-        this.driverFactory = driverFactory;
+    CallableLeagueParser(DriverManager driverManager, String leagueLink) {
+        this.driverManager = driverManager;
         this.leagueLink = leagueLink;
     }
 
     public List<Game> call() {
         try {
-            driver = driverFactory.getDriver();
+            driver = driverManager.getDriver();
             wait = new WebDriverWait(driver, 60);
             List<Game> games = processLeagueParsing(leagueLink);
             ConsoleLogger.logSeason(games.size());
             return games;
         } catch (InterruptedException e) {
-            throw new LeagueParserException(e.getMessage(), e);
+            throw new LeagueParserParserException(e.getMessage(), e);
         } finally {
-            driverFactory.addDriverToQueue(driver);
+            driverManager.addDriverToQueue(driver);
         }
     }
 

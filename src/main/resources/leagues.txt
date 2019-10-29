@@ -66,6 +66,6 @@
 //south-africa/premier-league
 //south-korea/k-league-1
 //south-korea/k-league-2
-japan/j1-league
-japan/j2-league
-ireland/premier-division
+//japan/j1-league
+//japan/j2-league
+//ireland/premier-division
