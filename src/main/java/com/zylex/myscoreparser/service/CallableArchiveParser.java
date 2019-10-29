@@ -1,7 +1,7 @@
 package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
-import com.zylex.myscoreparser.exceptions.ArchiveParserParserException;
+import com.zylex.myscoreparser.exceptions.ArchiveParserException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -36,7 +36,7 @@ public class CallableArchiveParser implements Callable<List<String>> {
             ConsoleLogger.logArchive();
             return archiveLinks;
         } catch (InterruptedException e) {
-            throw new ArchiveParserParserException(e.getMessage(), e);
+            throw new ArchiveParserException(e.getMessage(), e);
         } finally {
             driverManager.addDriverToQueue(driver);
         }

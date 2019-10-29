@@ -1,7 +1,7 @@
 package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
-import com.zylex.myscoreparser.exceptions.LeagueParserParserException;
+import com.zylex.myscoreparser.exceptions.LeagueParserException;
 import com.zylex.myscoreparser.model.Game;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -41,7 +41,7 @@ public class CallableLeagueParser implements Callable<List<Game>> {
             ConsoleLogger.logSeason(games.size());
             return games;
         } catch (InterruptedException e) {
-            throw new LeagueParserParserException(e.getMessage(), e);
+            throw new LeagueParserException(e.getMessage(), e);
         } finally {
             driverManager.addDriverToQueue(driver);
         }

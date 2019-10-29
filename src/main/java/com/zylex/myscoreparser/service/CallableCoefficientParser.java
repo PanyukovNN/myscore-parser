@@ -1,7 +1,7 @@
 package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
-import com.zylex.myscoreparser.exceptions.CoefficientParserParserException;
+import com.zylex.myscoreparser.exceptions.CoefficientParserException;
 import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Game;
 import org.jsoup.Jsoup;
@@ -44,7 +44,7 @@ public class CallableCoefficientParser implements Callable<List<Game>> {
             processCoefficientParsing();
             return games;
         } catch (InterruptedException e) {
-            throw new CoefficientParserParserException(e.getMessage(), e);
+            throw new CoefficientParserException(e.getMessage(), e);
         } finally {
             driverManager.addDriverToQueue(driver);
             ConsoleLogger.totalPlayOffGames.addAndGet(playOffGames);

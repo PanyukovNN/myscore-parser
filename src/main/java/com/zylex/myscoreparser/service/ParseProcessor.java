@@ -2,7 +2,7 @@ package com.zylex.myscoreparser.service;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.controller.LogType;
-import com.zylex.myscoreparser.exceptions.ParseProcessorParserException;
+import com.zylex.myscoreparser.exceptions.ParseProcessorException;
 import com.zylex.myscoreparser.model.Game;
 
 import java.util.*;
@@ -31,7 +31,7 @@ public class ParseProcessor {
             ConsoleLogger.startLogMessage(LogType.GAMES, null);
             return processCoefficients(leagueGames);
         } catch (InterruptedException | ExecutionException e) {
-            throw new ParseProcessorParserException(e.getMessage(), e);
+            throw new ParseProcessorException(e.getMessage(), e);
         } finally {
             service.shutdown();
         }
