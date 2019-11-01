@@ -79,10 +79,6 @@ public class Game {
         return statisticsItems;
     }
 
-    public void setCoefHref(String coefHref) {
-        this.coefHref = coefHref;
-    }
-
     public Map<String, Coefficient> getCoefficients() {
         return coefficients;
     }

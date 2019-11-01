@@ -4,9 +4,9 @@ public enum ParserType {
     COEFFICIENTS("coefficients"),
     STATISTICS("statistics");
 
-    public final String arhiveName;
+    public final String archiveName;
 
-    private ParserType(String arhiveName) {
-        this.arhiveName = arhiveName;
+    ParserType(String archiveName) {
+        this.archiveName = archiveName;
     }
 }

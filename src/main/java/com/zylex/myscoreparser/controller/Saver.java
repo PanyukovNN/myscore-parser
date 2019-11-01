@@ -22,24 +22,9 @@ public class Saver {
 
     private final String[] bookmakers = {"1XBET", "Winline", "Leon"};
 
-    private final String[] itemNames = {
-            "Удары",
-            "Удары в створ",
-            "Удары мимо",
-            "Блок-но ударов",
-            "Штрафные",
-            "Угловые",
-            "Офсайды",
-            "Сэйвы",
-            "Фолы",
-            "Желтые карточки",
-            "Красные карточки",
-            "Всего передач",
-            "Завершено передач",
-            "Oтборы",
-            "Атаки",
-            "Опасные атаки",
-    };
+    private final String[] itemNames = {"Владение мячом", "Удары", "Удары в створ", "Удары мимо", "Блок-но ударов",
+            "Штрафные", "Угловые", "Офсайды", "Сэйвы", "Фолы", "Желтые карточки", "Красные карточки",
+            "Всего передач", "Завершено передач", "Oтборы", "Атаки", "Опасные атаки"};
 
 
     private ParseProcessor parseProcessor;
@@ -74,7 +59,7 @@ public class Saver {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private File createArchiveFile() throws IOException {
-        File file = new File(String.format("results/%s.csv", parserType.arhiveName));
+        File file = new File(String.format("results/%s.csv", parserType.archiveName));
         if (!file.exists()) {
             file.createNewFile();
         }
@@ -101,7 +86,7 @@ public class Saver {
             } else if (parserType == ParserType.STATISTICS) {
                 addStatisticsToLine(game, line);
             }
-            line.append(String.format(";%s\n", game.getCoefHref()));
+            line.append("\n");//line.append(String.format(";%s\n", game.getCoefHref()));
             writer.write(line.toString());
         }
     }
@@ -136,7 +121,7 @@ public class Saver {
     }
 
     private void addStatisticsToLine(Game game, StringBuilder line) {
-        final String STATISTICS_FORMAT = "%s;%s;%s";
+        final String STATISTICS_FORMAT = ";%s:%s;%s";
         Map<String, StatisticsValue> statisticsItems = game.getStatisticsItems();
         for (String item : itemNames) {
             if (statisticsItems.containsKey(item)) {
@@ -146,7 +131,7 @@ public class Saver {
                         values.getHomeValue(),
                         values.getAwayValue()));
             } else {
-                line.append(";-;-;-");
+                line.append(String.format(";%s:-;-", item));
             }
         }
     }
