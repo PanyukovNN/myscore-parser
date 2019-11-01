@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-public class CallableLeagueParser implements Callable<List<Game>> {
+public class CallableSeasonParser implements Callable<List<Game>> {
 
     private String leagueLink;
 
@@ -33,10 +33,11 @@ public class CallableLeagueParser implements Callable<List<Game>> {
 
     private GameRepository gameRepository;
 
-    CallableLeagueParser(DriverManager driverManager, GameRepository gameRepository, String leagueLink) {
+    CallableSeasonParser(DriverManager driverManager, GameRepository gameRepository, String leagueLink) {
         this.driverManager = driverManager;
         this.gameRepository = gameRepository;
         this.leagueLink = leagueLink;
+
     }
 
     public List<Game> call() {
@@ -55,24 +56,13 @@ public class CallableLeagueParser implements Callable<List<Game>> {
 
     private List<Game> processLeagueParsing(String leagueLink) {
         driver.navigate().to(String.format("https://www.myscore.ru/football/%sresults/", leagueLink));
-        String leagueSeason = findLeagueSeason();
-        if (gameRepository.getLeagueSeasons().contains(leagueSeason)) {
-            ConsoleLogger.allInArchive = true;
-            return new ArrayList<>();
-        }
         showMore();
         return parseGames(driver);
     }
 
-    private String findLeagueSeason() {
-        String country = waitSingleElementAndGet("event__title--type").getText();
-        String league = waitSingleElementAndGet("teamHeader__name").getText();
-        String season = waitSingleElementAndGet("teamHeader__text").getText().replace("/", "");
-        return String.format("%s_%s_%s", country, league, season);
-    }
-
     private List<Game> parseGames(WebDriver driver) {
-        waitSingleElementAndGet("event__match");
+        wait.ignoring(StaleElementReferenceException.class)
+                .until(ExpectedConditions.elementToBeClickable(By.className("event__match")));
         String pageSource = driver.getPageSource();
         Document document = Jsoup.parse(pageSource);
         List<Game> games = new ArrayList<>();
@@ -89,9 +79,12 @@ public class CallableLeagueParser implements Callable<List<Game>> {
             String[] scores = gameElement.select("div.event__scores > span").text().split(" ");
             int firstBalls = Integer.parseInt(scores[0]);
             int secondBalls = Integer.parseInt(scores[1]);
-            String coefHref = gameElement.id().replace("g_1_", "");
-            Game game = new Game(country, league, season, gameDateTime, firstCommand, secondCommand, firstBalls, secondBalls, coefHref);
+            String link = gameElement.id().replace("g_1_", "");
+            Game game = new Game(country, league, season, gameDateTime, firstCommand, secondCommand, firstBalls, secondBalls, link);
+
+            ConsoleLogger.blockGames.incrementAndGet();
             if (gameRepository.getArchiveGames().contains(game)) {
+                gameRepository.getArchiveGames().get(gameRepository.getArchiveGames().indexOf(game)).setLink(game.getLink());
                 ConsoleLogger.blockGamesArchiveExist.incrementAndGet();
                 continue;
             }
@@ -126,11 +119,5 @@ public class CallableLeagueParser implements Callable<List<Game>> {
             dateTime = dateTime.plusYears(1);
         }
         return dateTime;
-    }
-
-    private WebElement waitSingleElementAndGet(String className) {
-        wait.ignoring(StaleElementReferenceException.class)
-                .until(ExpectedConditions.elementToBeClickable(By.className(className)));
-        return driver.findElement(By.className(className));
     }
 }

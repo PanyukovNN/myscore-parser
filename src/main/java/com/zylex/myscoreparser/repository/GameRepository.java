@@ -20,8 +20,6 @@ public class GameRepository {
 
     private List<Game> archiveGames = new ArrayList<>();
 
-    private Set<String> leagueSeasons = new HashSet<>();
-
     private ParserType parserType;
 
     public GameRepository(ParserType parserType) {
@@ -30,10 +28,6 @@ public class GameRepository {
 
     public List<Game> getArchiveGames() {
         return archiveGames;
-    }
-
-    public Set<String> getLeagueSeasons() {
-        return leagueSeasons;
     }
 
     public ParserType getParserType() {
@@ -50,14 +44,13 @@ public class GameRepository {
             for (String line : lines) {
                 String[] fields = line.replace(",", ".").split(";");
                 Game game = new Game(fields[0], fields[1], fields[2], LocalDateTime.parse(fields[3] + ";" + fields[4], DATE_FORMATTER), fields[5], fields[6],
-                        Integer.parseInt(fields[7]), Integer.parseInt(fields[8]), null);
+                        Integer.parseInt(fields[7]), Integer.parseInt(fields[8]), fields[9]);
                 if (parserType == ParserType.COEFFICIENTS) {
                     readCoefficients(fields, game);
                 } else if (parserType == ParserType.STATISTICS) {
                     readStatistics(fields, game);
                 }
                 archiveGames.add(game);
-                leagueSeasons.add(String.format("%s_%s_%s", fields[0], fields[1], fields[2]));
             }
         } catch (IOException e) {
             throw new ArchiveException(e.getMessage(), e);
@@ -66,9 +59,9 @@ public class GameRepository {
 
     private void readCoefficients(String[] fields, Game game) {
         Map<String, Coefficient> coefficients = game.getCoefficients();
-        coefficients.put(bookmakers[0], getCoefficient(bookmakers[0], Arrays.copyOfRange(fields, 9, 16)));
-        coefficients.put(bookmakers[1], getCoefficient(bookmakers[1], Arrays.copyOfRange(fields, 16, 23)));
-        coefficients.put(bookmakers[2], getCoefficient(bookmakers[2], Arrays.copyOfRange(fields, 23, 30)));
+        coefficients.put(bookmakers[0], getCoefficient(bookmakers[0], Arrays.copyOfRange(fields, 10, 17)));
+        coefficients.put(bookmakers[1], getCoefficient(bookmakers[1], Arrays.copyOfRange(fields, 17, 24)));
+        coefficients.put(bookmakers[2], getCoefficient(bookmakers[2], Arrays.copyOfRange(fields, 24, 31)));
     }
 
     private static Coefficient getCoefficient(String bookmaker, String[] fields) {
@@ -81,7 +74,7 @@ public class GameRepository {
     private void readStatistics(String[] fields, Game game) {
         Map<String, StatisticsValue> statisticsItems = game.getStatisticsItems();
         for (int i = 0; i < 17; i++) {
-            int index = (i * 2) + 9;
+            int index = (i * 2) + 10;
             String[] temp = fields[index].split(":");
             String itemName = temp[0];
             String homeValue = temp[1];

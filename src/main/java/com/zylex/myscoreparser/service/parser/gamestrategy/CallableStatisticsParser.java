@@ -60,7 +60,7 @@ public class CallableStatisticsParser implements Callable<List<Game>> {
     private void processStatisticParsing() {
         for (Game game : games) {
             ConsoleLogger.logGame();
-            driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#match-statistics;0", game.getCoefHref()));
+            driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#match-statistics;0", game.getLink()));
             if (!statisticsTableExists()) {
                 continue;
             }

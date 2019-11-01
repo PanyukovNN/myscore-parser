@@ -85,11 +85,11 @@ public class ParseProcessor {
     }
 
     private List<List<Game>> processLeagueGames(List<String> archiveLinks) throws InterruptedException, ExecutionException {
-        List<CallableLeagueParser> callableLeagueParsers = new ArrayList<>();
+        List<CallableSeasonParser> callableSeasonParsers = new ArrayList<>();
         for (String archiveLink : archiveLinks) {
-            callableLeagueParsers.add(new CallableLeagueParser(driverManager, gameRepository, archiveLink));
+            callableSeasonParsers.add(new CallableSeasonParser(driverManager, gameRepository, archiveLink));
         }
-        List<Future<List<Game>>> futureLeagueGames = service.invokeAll(callableLeagueParsers);
+        List<Future<List<Game>>> futureLeagueGames = service.invokeAll(callableSeasonParsers);
         List<List<Game>> gamesLinks = new ArrayList<>();
         for (Future<List<Game>> futureLeagueGame : futureLeagueGames) {
             gamesLinks.add(futureLeagueGame.get());

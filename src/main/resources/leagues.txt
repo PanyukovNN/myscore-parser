@@ -1,7 +1,7 @@
-//austria/tipico-bundesliga
-//australia/a-league
+austria/tipico-bundesliga
+australia/a-league
 england/premier-league
-//england/championship
+england/championship
 //argentina/superliga
 //belarus/vysshaya-liga
 //belgium/jupiler-league

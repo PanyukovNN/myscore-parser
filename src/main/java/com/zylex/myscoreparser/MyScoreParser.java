@@ -10,8 +10,8 @@ import com.zylex.myscoreparser.service.parser.gamestrategy.ParserType;
 public class MyScoreParser {
 
     public static void main(String[] args) {
-        int threads = 3;
-        ParserType parserType = ParserType.STATISTICS;
+        int threads = 4;
+        ParserType parserType = ParserType.COEFFICIENTS;
         new Saver(
             new ParseProcessor(
                 new DriverManager(threads),

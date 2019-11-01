@@ -23,7 +23,7 @@ public class ConsoleLogger {
 
     public static AtomicLong blockStartTime;
 
-    private static AtomicInteger blockGames = new AtomicInteger(0);
+    public static AtomicInteger blockGames = new AtomicInteger(0);
 
     private static AtomicInteger processedGames = new AtomicInteger(0);
 
@@ -47,7 +47,7 @@ public class ConsoleLogger {
 
     public static AtomicInteger blockGamesArchiveExist = new AtomicInteger(0);
 
-    public static boolean allInArchive = false;
+    private static boolean allInArchive = false;
 
     static {
         @SuppressWarnings("unchecked")
@@ -73,9 +73,8 @@ public class ConsoleLogger {
                     blockNumber,
                     blockLeagues.get()));
         } else if (type == LogType.GAMES) {
-            writeInLine(String.format("\nProcessing block №%d coefficients: 0/%d (0.0%%); Exist in archive: 0/%d",
+            writeInLine(String.format("\nProcessing block №%d coefficients: 0/%d (0.0%%)",
                     blockNumber,
-                    blockGames.get(),
                     blockGames.get()));
         }
     }
@@ -100,7 +99,7 @@ public class ConsoleLogger {
 
     public static synchronized void logSeason(int gamesSize) {
         totalGames.addAndGet(gamesSize);
-        blockGames.addAndGet(gamesSize);
+//        blockGames.addAndGet(gamesSize);
         String output = String.format("Processing block №%d seasons: %d/%d",
                 blockNumber,
                 processedSeasons.incrementAndGet(),
@@ -109,13 +108,11 @@ public class ConsoleLogger {
     }
 
     public static synchronized void logGame() {
-        String output = String.format("Processing block №%d coefficients: %d/%d (%s%%); Exist in archive: %d/%d",
+        String output = String.format("Processing block №%d coefficients: %d/%d (%s%%)",
                 blockNumber,
-                processedGames.incrementAndGet(),
-                blockGames.get() - blockGamesArchiveExist.get(),
-                new DecimalFormat("#0.0").format(((double) processedGames.get() / (double) (blockGames.get() - blockGamesArchiveExist.get())) * 100).replace(",", "."),
-                blockGamesArchiveExist.get(),
-                blockGames.get());
+                processedGames.incrementAndGet() + blockGamesArchiveExist.get(),
+                blockGames.get(),
+                new DecimalFormat("#0.0").format(((double) (processedGames.get() + blockGamesArchiveExist.get()) / (double) (blockGames.get())) * 100).replace(",", "."));
         writeInLine(StringUtils.repeat("\b", output.length()) + output);
     }
 

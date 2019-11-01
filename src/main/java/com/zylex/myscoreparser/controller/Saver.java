@@ -26,7 +26,6 @@ public class Saver {
             "Штрафные", "Угловые", "Офсайды", "Сэйвы", "Фолы", "Желтые карточки", "Красные карточки",
             "Всего передач", "Завершено передач", "Oтборы", "Атаки", "Опасные атаки"};
 
-
     private ParseProcessor parseProcessor;
 
     private ParserType parserType;
@@ -67,7 +66,7 @@ public class Saver {
     }
 
     private void writeToFile(List<Game> games, BufferedWriter writer) throws IOException {
-        final String GAME_BODY_FORMAT = "%s;%s;%s;%s;%s;%s;%d;%d";
+        final String GAME_BODY_FORMAT = "%s;%s;%s;%s;%s;%s;%d;%d;%s";
         for (Game game : games) {
             if (game.getCoefficients().isEmpty() && game.getStatisticsItems().isEmpty()) {
                 continue;
@@ -80,7 +79,8 @@ public class Saver {
                     game.getFirstCommand(),
                     game.getSecondCommand(),
                     game.getFirstBalls(),
-                    game.getSecondBalls()));
+                    game.getSecondBalls(),
+                    game.getLink()));
             if (parserType == ParserType.COEFFICIENTS) {
                 addCoefficientsToLine(game, line);
             } else if (parserType == ParserType.STATISTICS) {

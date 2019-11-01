@@ -56,7 +56,7 @@ public class CallableCoefficientParser implements Callable<List<Game>> {
     private void processCoefficientParsing() {
         for (Game game : games) {
             ConsoleLogger.logGame();
-            driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#odds-comparison;1x2-odds;full-time", game.getCoefHref()));
+            driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#odds-comparison;1x2-odds;full-time", game.getLink()));
             if (!coefficientTableExists()) {
                 continue;
             }
