@@ -19,10 +19,9 @@ public class DriverManager {
 
     public DriverManager(int threads) {
         this.threads = threads;
-        initiateDrivers();
     }
 
-    private void initiateDrivers() {
+    public void initiateDrivers() {
         WebDriverManager.chromedriver().version("77.0.3865.40").setup();
         ConsoleLogger.startLogMessage(LogType.DRIVERS, threads);
         for (int i = 0; i < threads; i++) {
@@ -36,11 +35,11 @@ public class DriverManager {
         }
     }
 
-    int getThreads() {
+    public int getThreads() {
         return threads;
     }
 
-    synchronized WebDriver getDriver() throws InterruptedException {
+    public synchronized WebDriver getDriver() throws InterruptedException {
         WebDriver driver = null;
         while (driver == null) {
             driver = drivers.poll();
@@ -49,11 +48,11 @@ public class DriverManager {
         return driver;
     }
 
-    synchronized void addDriverToQueue(WebDriver driver) {
+    public synchronized void addDriverToQueue(WebDriver driver) {
         drivers.add(driver);
     }
 
-    void quitDrivers() {
+    public void quitDrivers() {
         for (WebDriver driver : drivers) {
             driver.quit();
         }

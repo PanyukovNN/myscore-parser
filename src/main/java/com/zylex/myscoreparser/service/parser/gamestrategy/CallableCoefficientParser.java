@@ -1,23 +1,21 @@
-package com.zylex.myscoreparser.service;
+package com.zylex.myscoreparser.service.parser.gamestrategy;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.exceptions.CoefficientParserException;
 import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Game;
+import com.zylex.myscoreparser.service.DriverManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.openqa.selenium.By;
-import org.openqa.selenium.TimeoutException;
-import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 public class CallableCoefficientParser implements Callable<List<Game>> {
 
@@ -35,7 +33,7 @@ public class CallableCoefficientParser implements Callable<List<Game>> {
 
     private List<Game> archiveGames;
 
-    CallableCoefficientParser(DriverManager driverManager, List<Game> archiveGames, List<Game> games) {
+    public CallableCoefficientParser(DriverManager driverManager, List<Game> archiveGames, List<Game> games) {
         this.games = games;
         this.archiveGames = archiveGames;
         this.driverManager = driverManager;
@@ -51,10 +49,7 @@ public class CallableCoefficientParser implements Callable<List<Game>> {
             throw new CoefficientParserException(e.getMessage(), e);
         } finally {
             driverManager.addDriverToQueue(driver);
-            ConsoleLogger.totalPlayOffGames.addAndGet(playOffGames);
-            ConsoleLogger.totalWithNoCoef.addAndGet(noCoefficientGames);
-            ConsoleLogger.blockPlayOffGames.set(playOffGames);
-            ConsoleLogger.blockNoCoefficientGames.set(noCoefficientGames);
+            ConsoleLogger.addPlayOffAndNoCoefGames(playOffGames, noCoefficientGames);
         }
     }
 
@@ -103,7 +98,6 @@ public class CallableCoefficientParser implements Callable<List<Game>> {
         Map<String, Coefficient> coefficients = game.getCoefficients();
         process1x2Coefficients(coef1x2Games, coefficients);
         processDchCoefficients(coefDchGames, coefficients);
-
         if (!coefficients.isEmpty()) {
             archiveGames.add(game);
         }

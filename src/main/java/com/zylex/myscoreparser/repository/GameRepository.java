@@ -1,19 +1,17 @@
 package com.zylex.myscoreparser.repository;
 
 import com.zylex.myscoreparser.exceptions.ArchiveException;
-import com.zylex.myscoreparser.exceptions.RepositoryException;
 import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Game;
-import com.zylex.myscoreparser.service.DriverManager;
+import com.zylex.myscoreparser.service.parser.gamestrategy.ParserType;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
-public class Repository {
+public class GameRepository {
 
     private final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd;HH:mm");
 
@@ -23,10 +21,6 @@ public class Repository {
 
     private Set<String> leagueSeasons = new HashSet<>();
 
-    public Repository() {
-        archiveGames = readArchiveGames();
-    }
-
     public List<Game> getArchiveGames() {
         return archiveGames;
     }
@@ -35,10 +29,23 @@ public class Repository {
         return leagueSeasons;
     }
 
-    private List<Game> readArchiveGames() {
+    private ParserType parserType;
+
+    public GameRepository(ParserType parserType) {
+        this.parserType = parserType;
+    }
+
+    public ParserType getParserType() {
+        return parserType;
+    }
+
+    public void readArchiveGames() {
         try {
-            File file = new File("results/total_statistics.csv");
-            List<String> lines = Files.readAllLines(file.toPath());
+            File file = new File(String.format("results/%s.csv", parserType.arhiveName));
+            List<String> lines = new ArrayList<>();
+            if (file.exists()) {
+                lines = Files.readAllLines(file.toPath());
+            }
             List<Game> games = new ArrayList<>();
             for (String line : lines) {
                 String[] fields = line.replace(",", ".").split(";");
@@ -51,7 +58,7 @@ public class Repository {
                 games.add(game);
                 leagueSeasons.add(String.format("%s_%s_%s", fields[0], fields[1], fields[2]));
             }
-            return games;
+            this.archiveGames = games;
         } catch (IOException e) {
             throw new ArchiveException(e.getMessage(), e);
         }
@@ -62,45 +69,5 @@ public class Repository {
         coefficient.setDch1X(fields[5]);
         coefficient.setDchX2(fields[6]);
         return coefficient;
-    }
-
-    public void sortArchive() {
-        archiveGames = archiveGames.stream()
-                .sorted(Comparator.comparing(Game::getCountry)
-                        .thenComparing(Game::getLeagueName)
-                        .thenComparing(Game::getSeason)
-                        .thenComparing(Game::getGameDate)
-                ).collect(Collectors.toList());
-    }
-
-
-    public List<List<String>> readDiscreteLeaguesFromFile(int threads) {
-        try {
-            InputStream inputStream = DriverManager.class.getResourceAsStream("/leagues.txt");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            List<String> leagueLinks = new ArrayList<>();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (!line.contains("//") && !line.isEmpty()) {
-                    leagueLinks.add(line);
-                }
-            }
-            return getDiscreteLeagueList(threads, leagueLinks);
-        } catch (IOException e) {
-            throw new RepositoryException(e.getMessage(), e);
-        }
-    }
-
-    private List<List<String>> getDiscreteLeagueList(int threads, List<String> leagueLinks) {
-        List<List<String>> discreteList = new ArrayList<>();
-        while (true) {
-            if (leagueLinks.size() <= threads) {
-                discreteList.add(leagueLinks);
-                break;
-            }
-            discreteList.add(leagueLinks.subList(0, threads));
-            leagueLinks = leagueLinks.subList(threads, leagueLinks.size());
-        }
-        return discreteList;
     }
 }

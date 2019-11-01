@@ -1,17 +1,18 @@
-package com.zylex.myscoreparser.service;
+package com.zylex.myscoreparser.service.parser;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.controller.LogType;
-import com.zylex.myscoreparser.controller.Saver;
 import com.zylex.myscoreparser.exceptions.ParseProcessorException;
 import com.zylex.myscoreparser.model.Game;
-import com.zylex.myscoreparser.repository.Repository;
+import com.zylex.myscoreparser.repository.GameRepository;
+import com.zylex.myscoreparser.repository.LeagueRepository;
+import com.zylex.myscoreparser.service.DriverManager;
+import com.zylex.myscoreparser.service.parser.gamestrategy.CallableCoefficientParser;
+import com.zylex.myscoreparser.service.parser.gamestrategy.CallableStatisticsParser;
+import com.zylex.myscoreparser.service.parser.gamestrategy.ParserType;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -21,22 +22,38 @@ public class ParseProcessor {
 
     private ExecutorService service;
 
-    private Repository repository;
+    private GameRepository gameRepository;
 
-    public void process(DriverManager driverManager, Repository repository) {
+    private LeagueRepository leagueRepository;
+
+    private ParserType parserType;
+
+    public ParserType getParserType() {
+        return parserType;
+    }
+
+    public ParseProcessor(DriverManager driverManager, GameRepository gameRepository, LeagueRepository leagueRepository) {
         this.driverManager = driverManager;
-        this.service = Executors.newFixedThreadPool(driverManager.getThreads());
-        this.repository = repository;
+        this.gameRepository = gameRepository;
+        this.leagueRepository = leagueRepository;
+        this.parserType = gameRepository.getParserType();
+    }
+
+    public List<Game> process() {
         try {
-            List<List<String>> leagueSeasonLinksList = repository.readDiscreteLeaguesFromFile(driverManager.getThreads());
+            driverManager.initiateDrivers();
+            service = Executors.newFixedThreadPool(driverManager.getThreads());
+            gameRepository.readArchiveGames();
+            List<List<String>> leagueSeasonLinksList = leagueRepository.readDiscreteLeaguesFromFile(driverManager.getThreads());
             for (List<String> leagueSeasonLinks : leagueSeasonLinksList) {
                 processBlock(leagueSeasonLinks);
             }
         } finally {
             service.shutdown();
             driverManager.quitDrivers();
-            new Saver().processArchiveSaving(repository);
+            ConsoleLogger.totalSummarizing();
         }
+        return gameRepository.getArchiveGames();
     }
 
     private void processBlock(List<String> leagueSeasonLinks) {
@@ -47,7 +64,7 @@ public class ParseProcessor {
             ConsoleLogger.startLogMessage(LogType.SEASONS, archiveLinks.size());
             List<List<Game>> leagueGames = processLeagueGames(archiveLinks);
             ConsoleLogger.startLogMessage(LogType.GAMES, null);
-            processCoefficients(leagueGames);
+            processBlockGames(leagueGames);
         } catch (InterruptedException | ExecutionException e) {
             throw new ParseProcessorException(e.getMessage(), e);
         } finally {
@@ -70,7 +87,7 @@ public class ParseProcessor {
     private List<List<Game>> processLeagueGames(List<String> archiveLinks) throws InterruptedException, ExecutionException {
         List<CallableLeagueParser> callableLeagueParsers = new ArrayList<>();
         for (String archiveLink : archiveLinks) {
-            callableLeagueParsers.add(new CallableLeagueParser(driverManager, repository, archiveLink));
+            callableLeagueParsers.add(new CallableLeagueParser(driverManager, gameRepository, archiveLink));
         }
         List<Future<List<Game>>> futureLeagueGames = service.invokeAll(callableLeagueParsers);
         List<List<Game>> gamesLinks = new ArrayList<>();
@@ -96,12 +113,16 @@ public class ParseProcessor {
         return Integer.parseInt(games.get(0).getSeason().substring(0, 4));
     }
 
-    private void processCoefficients(List<List<Game>> gamesList) throws InterruptedException, ExecutionException {
-        List<CallableCoefficientParser> callableCoefficientParsers = new ArrayList<>();
+    private void processBlockGames(List<List<Game>> gamesList) throws InterruptedException, ExecutionException {
+        List<Callable<List<Game>>> callableGameParsers = new ArrayList<>();
         for (List<Game> games : gamesList) {
-            callableCoefficientParsers.add(new CallableCoefficientParser(driverManager, repository.getArchiveGames(), games));
+            if (parserType == ParserType.COEFFICIENTS) {
+                callableGameParsers.add(new CallableCoefficientParser(driverManager, gameRepository.getArchiveGames(), games));
+            } else if (parserType == ParserType.STATISTICS) {
+                callableGameParsers.add(new CallableStatisticsParser(driverManager, gameRepository.getArchiveGames(), games));
+            }
         }
-        for (Future<List<Game>> future : service.invokeAll(callableCoefficientParsers)) {
+        for (Future<List<Game>> future : service.invokeAll(callableGameParsers)) {
             future.get();
         }
     }

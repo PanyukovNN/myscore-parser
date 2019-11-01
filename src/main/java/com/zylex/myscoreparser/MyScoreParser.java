@@ -1,20 +1,22 @@
 package com.zylex.myscoreparser;
 
-import com.zylex.myscoreparser.controller.ConsoleLogger;
-import com.zylex.myscoreparser.repository.Repository;
+import com.zylex.myscoreparser.controller.Saver;
+import com.zylex.myscoreparser.repository.GameRepository;
+import com.zylex.myscoreparser.repository.LeagueRepository;
 import com.zylex.myscoreparser.service.DriverManager;
-import com.zylex.myscoreparser.service.ParseProcessor;
+import com.zylex.myscoreparser.service.parser.ParseProcessor;
+import com.zylex.myscoreparser.service.parser.gamestrategy.ParserType;
 
 public class MyScoreParser {
 
     public static void main(String[] args) {
-        try {
-            int threads = Integer.parseInt(args[0]);
-            new ParseProcessor().process(
-                    new DriverManager(threads),
-                    new Repository());
-        } finally {
-            ConsoleLogger.totalSummarizing();
-        }
+        int threads = 3;
+        ParserType parserType = ParserType.STATISTICS;
+        new Saver(
+            new ParseProcessor(
+                new DriverManager(threads),
+                new GameRepository(parserType),
+                new LeagueRepository())
+        ).processSaving();
     }
 }

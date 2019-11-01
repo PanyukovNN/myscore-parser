@@ -1,7 +1,8 @@
-package com.zylex.myscoreparser.service;
+package com.zylex.myscoreparser.service.parser;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.exceptions.ArchiveParserException;
+import com.zylex.myscoreparser.service.DriverManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;

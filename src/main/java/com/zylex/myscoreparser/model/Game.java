@@ -25,6 +25,8 @@ public class Game {
 
     private Map<String, Coefficient> coefficients = new HashMap<>();
 
+    private Map<String, StatisticsValue> statisticsItems = new HashMap<>();
+
     public Game(String country, String leagueName, String season, LocalDateTime gameDate, String firstCommand, String secondCommand, int firstBalls, int secondBalls, String coefHref) {
         this.country = country;
         this.leagueName = leagueName;
@@ -73,6 +75,10 @@ public class Game {
         return coefHref;
     }
 
+    public Map<String, StatisticsValue> getStatisticsItems() {
+        return statisticsItems;
+    }
+
     public void setCoefHref(String coefHref) {
         this.coefHref = coefHref;
     }
@@ -111,7 +117,8 @@ public class Game {
                 ", firstBalls=" + firstBalls +
                 ", secondBalls=" + secondBalls +
                 ", coefHref='" + coefHref + '\'' +
-                ", \tcoeffitients=" + coefficients +
+                ", coefficients=" + coefficients +
+                ", statisticsItems=" + statisticsItems +
                 '}';
     }
 }

@@ -1,14 +1,16 @@
-package com.zylex.myscoreparser.service;
+package com.zylex.myscoreparser.service.parser;
 
 import com.zylex.myscoreparser.controller.ConsoleLogger;
 import com.zylex.myscoreparser.exceptions.LeagueParserException;
 import com.zylex.myscoreparser.model.Game;
-import com.zylex.myscoreparser.repository.Repository;
+import com.zylex.myscoreparser.repository.GameRepository;
+import com.zylex.myscoreparser.service.DriverManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.*;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.LocalDateTime;
@@ -29,18 +31,18 @@ public class CallableLeagueParser implements Callable<List<Game>> {
 
     private DriverManager driverManager;
 
-    private Repository repository;
+    private GameRepository gameRepository;
 
-    CallableLeagueParser(DriverManager driverManager, Repository repository, String leagueLink) {
+    CallableLeagueParser(DriverManager driverManager, GameRepository gameRepository, String leagueLink) {
         this.driverManager = driverManager;
-        this.repository = repository;
+        this.gameRepository = gameRepository;
         this.leagueLink = leagueLink;
     }
 
     public List<Game> call() {
         try {
             driver = driverManager.getDriver();
-            wait = new WebDriverWait(driver, 60);
+            wait = new WebDriverWait(driver, 10);
             List<Game> games = processLeagueParsing(leagueLink);
             ConsoleLogger.logSeason(games.size());
             return games;
@@ -51,28 +53,28 @@ public class CallableLeagueParser implements Callable<List<Game>> {
         }
     }
 
-    private List<Game> processLeagueParsing(String leagueLink) throws InterruptedException {
+    private List<Game> processLeagueParsing(String leagueLink) {
         driver.navigate().to(String.format("https://www.myscore.ru/football/%sresults/", leagueLink));
         String leagueSeason = findLeagueSeason();
-        if (repository.getLeagueSeasons().contains(leagueSeason)) {
+        if (gameRepository.getLeagueSeasons().contains(leagueSeason)) {
             ConsoleLogger.allInArchive = true;
             return new ArrayList<>();
         }
-        showMore(driver);
-        String pageSource = driver.getPageSource();
-        Document document = Jsoup.parse(pageSource);
-        return parseGames(document);
+        showMore();
+        return parseGames(driver);
     }
 
-    private String findLeagueSeason() throws InterruptedException {
-        Thread.sleep(1500);
-        String country = driver.findElement(By.className("event__title--type")).getText();
-        String league = driver.findElement(By.className("teamHeader__name")).getText();
-        String season = driver.findElement(By.className("teamHeader__text")).getText().replace("/", "");
+    private String findLeagueSeason() {
+        String country = waitSingleElementAndGet("event__title--type").getText();
+        String league = waitSingleElementAndGet("teamHeader__name").getText();
+        String season = waitSingleElementAndGet("teamHeader__text").getText().replace("/", "");
         return String.format("%s_%s_%s", country, league, season);
     }
 
-    private List<Game> parseGames(Document document) {
+    private List<Game> parseGames(WebDriver driver) {
+        waitSingleElementAndGet("event__match");
+        String pageSource = driver.getPageSource();
+        Document document = Jsoup.parse(pageSource);
         List<Game> games = new ArrayList<>();
         Elements gamesElements = document.select("div.event__match");
         String country = document.select("span.event__title--type").first().text();
@@ -89,7 +91,7 @@ public class CallableLeagueParser implements Callable<List<Game>> {
             int secondBalls = Integer.parseInt(scores[1]);
             String coefHref = gameElement.id().replace("g_1_", "");
             Game game = new Game(country, league, season, gameDateTime, firstCommand, secondCommand, firstBalls, secondBalls, coefHref);
-            if (repository.getArchiveGames().contains(game)) {
+            if (gameRepository.getArchiveGames().contains(game)) {
                 ConsoleLogger.blockGamesArchiveExist.incrementAndGet();
                 continue;
             }
@@ -98,18 +100,14 @@ public class CallableLeagueParser implements Callable<List<Game>> {
         return games;
     }
 
-    private void showMore(WebDriver driver) throws InterruptedException {
+    private void showMore() {
         while (true) {
             try {
-                wait.until(webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-                Thread.sleep(2000);
-                if (driver.findElements(By.className("event__more")).size() > 0) {
-                    driver.findElement(By.className("event__more")).click();
-                } else {
-                    break;
-                }
-            } catch (NoSuchElementException | StaleElementReferenceException | ElementClickInterceptedException ignore) {
-//                System.out.println("Can't click \"show more\" button, trying again...");
+                Thread.sleep(1000);
+                driver.findElement(By.className("event__more")).click();
+            } catch (NoSuchElementException e) {
+                break;
+            } catch (StaleElementReferenceException | ElementClickInterceptedException | InterruptedException ignore) {
             }
         }
     }
@@ -128,5 +126,11 @@ public class CallableLeagueParser implements Callable<List<Game>> {
             dateTime = dateTime.plusYears(1);
         }
         return dateTime;
+    }
+
+    private WebElement waitSingleElementAndGet(String className) {
+        wait.ignoring(StaleElementReferenceException.class)
+                .until(ExpectedConditions.elementToBeClickable(By.className(className)));
+        return driver.findElement(By.className(className));
     }
 }

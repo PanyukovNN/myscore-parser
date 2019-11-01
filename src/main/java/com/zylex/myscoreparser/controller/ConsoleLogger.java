@@ -15,9 +15,9 @@ public class ConsoleLogger {
 
     private static AtomicLong programStartTime = new AtomicLong(System.currentTimeMillis());
 
-    public static AtomicInteger totalWithNoCoef = new AtomicInteger(0);
+    private static AtomicInteger totalWithNoCoef = new AtomicInteger(0);
 
-    public static AtomicInteger totalPlayOffGames = new AtomicInteger(0);
+    private static AtomicInteger totalPlayOffGames = new AtomicInteger(0);
 
     private static AtomicInteger totalGames = new AtomicInteger(0);
 
@@ -41,9 +41,9 @@ public class ConsoleLogger {
 
     private static int processedDrivers = 0;
 
-    public static AtomicInteger blockPlayOffGames = new AtomicInteger(0);
+    private static AtomicInteger blockPlayOffGames = new AtomicInteger(0);
 
-    public static AtomicInteger blockNoCoefficientGames = new AtomicInteger(0);
+    private static AtomicInteger blockNoCoefficientGames = new AtomicInteger(0);
 
     public static AtomicInteger blockGamesArchiveExist = new AtomicInteger(0);
 
@@ -166,7 +166,14 @@ public class ConsoleLogger {
         writeInLine("\n" + StringUtils.repeat("-", 50));
     }
 
-    public static synchronized void writeInLine(String message) {
+    private static synchronized void writeInLine(String message) {
         System.out.print(message);
+    }
+
+    public static void addPlayOffAndNoCoefGames(int playOffGames, int noCoefficientGames) {
+        totalPlayOffGames.addAndGet(playOffGames);
+        totalWithNoCoef.addAndGet(noCoefficientGames);
+        blockPlayOffGames.set(playOffGames);
+        blockNoCoefficientGames.set(noCoefficientGames);
     }
 }
