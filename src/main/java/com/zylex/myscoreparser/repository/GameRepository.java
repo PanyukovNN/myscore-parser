@@ -81,8 +81,12 @@ public class GameRepository {
     private void readStatistics(String[] fields, Game game) {
         Map<String, StatisticsValue> statisticsItems = game.getStatisticsItems();
         for (int i = 0; i < 17; i++) {
-            int index = i + 9;
-            statisticsItems.put(fields[index], new StatisticsValue(fields[index + 1], fields[index + 2]));
+            int index = (i * 2) + 9;
+            String[] temp = fields[index].split(":");
+            String itemName = temp[0];
+            String homeValue = temp[1];
+            String awayValue = fields[index + 1];
+            statisticsItems.put(itemName, new StatisticsValue(homeValue, awayValue));
         }
     }
 }
