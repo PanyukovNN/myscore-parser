@@ -1,4 +1,4 @@
-package com.zylex.myscoreparser.repository;
+package com.zylex.myscoreparser.controller;
 
 import com.zylex.myscoreparser.exceptions.RepositoryException;
 import com.zylex.myscoreparser.service.DriverManager;

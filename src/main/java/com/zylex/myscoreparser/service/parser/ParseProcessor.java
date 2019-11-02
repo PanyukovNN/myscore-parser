@@ -1,22 +1,27 @@
 package com.zylex.myscoreparser.service.parser;
 
-import com.zylex.myscoreparser.controller.ConsoleLogger;
-import com.zylex.myscoreparser.controller.LogType;
+import com.zylex.myscoreparser.controller.logger.BlockLogger;
+import com.zylex.myscoreparser.controller.logger.ConsoleLogger;
+import com.zylex.myscoreparser.controller.logger.LogType;
+import com.zylex.myscoreparser.controller.logger.ParserLogger;
 import com.zylex.myscoreparser.exceptions.ParseProcessorException;
 import com.zylex.myscoreparser.model.Game;
-import com.zylex.myscoreparser.repository.GameRepository;
-import com.zylex.myscoreparser.repository.LeagueRepository;
+import com.zylex.myscoreparser.controller.GameRepository;
+import com.zylex.myscoreparser.controller.LeagueRepository;
 import com.zylex.myscoreparser.service.DriverManager;
-import com.zylex.myscoreparser.service.parser.gamestrategy.CallableCoefficientParser;
-import com.zylex.myscoreparser.service.parser.gamestrategy.CallableStatisticsParser;
-import com.zylex.myscoreparser.service.parser.gamestrategy.ParserType;
+import com.zylex.myscoreparser.service.parser.parsing_strategy.CallableCoefficientParser;
+import com.zylex.myscoreparser.service.parser.parsing_strategy.CallableStatisticsParser;
+import com.zylex.myscoreparser.service.parser.parsing_strategy.ParserType;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class ParseProcessor {
+
+    private ParserLogger logger = new ParserLogger();
+
+    private BlockLogger blockLogger;
 
     private DriverManager driverManager;
 
@@ -51,31 +56,29 @@ public class ParseProcessor {
         } finally {
             service.shutdown();
             driverManager.quitDrivers();
-            ConsoleLogger.totalSummarizing();
+            logger.totalSummarizing();
         }
         return gameRepository.getArchiveGames();
     }
 
     private void processBlock(List<String> leagueSeasonLinks) {
-        ConsoleLogger.blockStartTime = new AtomicLong(System.currentTimeMillis());
+        blockLogger = new BlockLogger(logger);
         try {
-            ConsoleLogger.startLogMessage(LogType.ARCHIVES, leagueSeasonLinks.size());
             List<String> archiveLinks = processArchiveLinks(leagueSeasonLinks);
-            ConsoleLogger.startLogMessage(LogType.SEASONS, archiveLinks.size());
             List<List<Game>> leagueGames = processLeagueGames(archiveLinks);
-            ConsoleLogger.startLogMessage(LogType.GAMES, null);
             processBlockGames(leagueGames);
         } catch (InterruptedException | ExecutionException e) {
             throw new ParseProcessorException(e.getMessage(), e);
         } finally {
-            ConsoleLogger.blockSummarizing();
+            blockLogger.blockSummarizing();
         }
     }
 
     private List<String> processArchiveLinks(List<String> leagueSeasonLinks) throws InterruptedException, ExecutionException {
+        blockLogger.startLogMessage(LogType.ARCHIVES, leagueSeasonLinks.size());
         List<CallableArchiveParser> callableArchiveParsers = new ArrayList<>();
         for (String countryLeague : leagueSeasonLinks) {
-            callableArchiveParsers.add(new CallableArchiveParser(driverManager, countryLeague));
+            callableArchiveParsers.add(new CallableArchiveParser(blockLogger, driverManager, countryLeague));
         }
         List<String> archiveLinks = new ArrayList<>();
         for (Future<List<String>> future : service.invokeAll(callableArchiveParsers)) {
@@ -85,9 +88,10 @@ public class ParseProcessor {
     }
 
     private List<List<Game>> processLeagueGames(List<String> archiveLinks) throws InterruptedException, ExecutionException {
+        blockLogger.startLogMessage(LogType.SEASONS, archiveLinks.size());
         List<CallableSeasonParser> callableSeasonParsers = new ArrayList<>();
         for (String archiveLink : archiveLinks) {
-            callableSeasonParsers.add(new CallableSeasonParser(driverManager, gameRepository, archiveLink));
+            callableSeasonParsers.add(new CallableSeasonParser(blockLogger, driverManager, gameRepository, archiveLink));
         }
         List<Future<List<Game>>> futureLeagueGames = service.invokeAll(callableSeasonParsers);
         List<List<Game>> gamesLinks = new ArrayList<>();
@@ -114,12 +118,13 @@ public class ParseProcessor {
     }
 
     private void processBlockGames(List<List<Game>> gamesList) throws InterruptedException, ExecutionException {
+        blockLogger.startLogMessage(LogType.GAMES, null);
         List<Callable<List<Game>>> callableGameParsers = new ArrayList<>();
         for (List<Game> games : gamesList) {
             if (parserType == ParserType.COEFFICIENTS) {
-                callableGameParsers.add(new CallableCoefficientParser(driverManager, gameRepository.getArchiveGames(), games));
+                callableGameParsers.add(new CallableCoefficientParser(blockLogger, driverManager, gameRepository.getArchiveGames(), games));
             } else if (parserType == ParserType.STATISTICS) {
-                callableGameParsers.add(new CallableStatisticsParser(driverManager, gameRepository.getArchiveGames(), games));
+                callableGameParsers.add(new CallableStatisticsParser(blockLogger, driverManager, gameRepository.getArchiveGames(), games));
             }
         }
         for (Future<List<Game>> future : service.invokeAll(callableGameParsers)) {

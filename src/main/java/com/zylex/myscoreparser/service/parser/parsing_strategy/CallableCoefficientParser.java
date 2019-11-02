@@ -1,6 +1,6 @@
-package com.zylex.myscoreparser.service.parser.gamestrategy;
+package com.zylex.myscoreparser.service.parser.parsing_strategy;
 
-import com.zylex.myscoreparser.controller.ConsoleLogger;
+import com.zylex.myscoreparser.controller.logger.BlockLogger;
 import com.zylex.myscoreparser.exceptions.CoefficientParserException;
 import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Game;
@@ -27,16 +27,19 @@ public class CallableCoefficientParser implements Callable<List<Game>> {
 
     private int playOffGames = 0;
 
-    private int noCoefficientGames = 0;
+    private int noDataGames = 0;
 
     private DriverManager driverManager;
 
     private List<Game> archiveGames;
 
-    public CallableCoefficientParser(DriverManager driverManager, List<Game> archiveGames, List<Game> games) {
-        this.games = games;
-        this.archiveGames = archiveGames;
+    private BlockLogger logger;
+
+    public CallableCoefficientParser(BlockLogger logger, DriverManager driverManager, List<Game> archiveGames, List<Game> games) {
+        this.logger = logger;
         this.driverManager = driverManager;
+        this.archiveGames = archiveGames;
+        this.games = games;
     }
 
     public List<Game> call() {
@@ -49,13 +52,14 @@ public class CallableCoefficientParser implements Callable<List<Game>> {
             throw new CoefficientParserException(e.getMessage(), e);
         } finally {
             driverManager.addDriverToQueue(driver);
-            ConsoleLogger.addPlayOffAndNoCoefGames(playOffGames, noCoefficientGames);
+            logger.setPlayOffGames(playOffGames);
+            logger.setNoDataGames(noDataGames);
         }
     }
 
     private void processCoefficientParsing() {
         for (Game game : games) {
-            ConsoleLogger.logGame();
+            logger.logGame();
             driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#odds-comparison;1x2-odds;full-time", game.getLink()));
             if (!coefficientTableExists()) {
                 continue;
@@ -77,7 +81,7 @@ public class CallableCoefficientParser implements Callable<List<Game>> {
             }
             wait.until(ExpectedConditions.presenceOfElementLocated(By.id("odds_1x2")));
         } catch (TimeoutException | InterruptedException ignore) {
-            noCoefficientGames++;
+            noDataGames++;
             return false;
         }
         return true;

@@ -1,10 +1,10 @@
-package com.zylex.myscoreparser.repository;
+package com.zylex.myscoreparser.controller;
 
 import com.zylex.myscoreparser.exceptions.ArchiveException;
 import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Game;
 import com.zylex.myscoreparser.model.StatisticsValue;
-import com.zylex.myscoreparser.service.parser.gamestrategy.ParserType;
+import com.zylex.myscoreparser.service.parser.parsing_strategy.ParserType;
 
 import java.io.*;
 import java.nio.file.Files;

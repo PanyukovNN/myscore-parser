@@ -1,4 +1,4 @@
-package com.zylex.myscoreparser.controller;
+package com.zylex.myscoreparser.controller.logger;
 
 public enum LogType {
     DRIVERS,

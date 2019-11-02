@@ -1,7 +1,7 @@
 package com.zylex.myscoreparser.service;
 
-import com.zylex.myscoreparser.controller.ConsoleLogger;
-import com.zylex.myscoreparser.controller.LogType;
+import com.zylex.myscoreparser.controller.logger.DriverLogger;
+import com.zylex.myscoreparser.controller.logger.LogType;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -10,8 +10,12 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DriverManager {
+
+    private DriverLogger logger = new DriverLogger();
 
     private int threads;
 
@@ -22,8 +26,10 @@ public class DriverManager {
     }
 
     public void initiateDrivers() {
+        System.setProperty("webdriver.chrome.silentOutput", "true");
+        Logger.getLogger("org.openqa.selenium").setLevel(Level.OFF);
         WebDriverManager.chromedriver().version("77.0.3865.40").setup();
-        ConsoleLogger.startLogMessage(LogType.DRIVERS, threads);
+        logger.startLogMessage(LogType.DRIVERS, threads);
         for (int i = 0; i < threads; i++) {
             ChromeOptions options = new ChromeOptions();
             options.addArguments("--window-size=1200,600");
@@ -31,7 +37,7 @@ public class DriverManager {
             WebDriver driver = new ChromeDriver(options);
             driver.manage().timeouts().pageLoadTimeout(600, TimeUnit.SECONDS);
             drivers.add(driver);
-            ConsoleLogger.logDriver();
+            logger.logDriver();
         }
     }
 

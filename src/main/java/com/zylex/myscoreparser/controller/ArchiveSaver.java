@@ -5,7 +5,7 @@ import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Game;
 import com.zylex.myscoreparser.model.StatisticsValue;
 import com.zylex.myscoreparser.service.parser.ParseProcessor;
-import com.zylex.myscoreparser.service.parser.gamestrategy.ParserType;
+import com.zylex.myscoreparser.service.parser.parsing_strategy.ParserType;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Saver {
+public class ArchiveSaver {
 
     private final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd;HH:mm");
 
@@ -30,7 +30,7 @@ public class Saver {
 
     private ParserType parserType;
 
-    public Saver(ParseProcessor parseProcessor) {
+    public ArchiveSaver(ParseProcessor parseProcessor) {
         this.parseProcessor = parseProcessor;
         this.parserType = parseProcessor.getParserType();
     }

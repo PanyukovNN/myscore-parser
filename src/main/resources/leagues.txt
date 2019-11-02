@@ -2,10 +2,10 @@ austria/tipico-bundesliga
 australia/a-league
 england/premier-league
 england/championship
-//argentina/superliga
-//belarus/vysshaya-liga
-//belgium/jupiler-league
-//bulgaria/parva-liga
+argentina/superliga
+belarus/vysshaya-liga
+belgium/jupiler-league
+bulgaria/parva-liga
 
 //brazil/serie-a
 //brazil/serie-b

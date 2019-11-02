@@ -1,9 +1,9 @@
 package com.zylex.myscoreparser.service.parser;
 
-import com.zylex.myscoreparser.controller.ConsoleLogger;
+import com.zylex.myscoreparser.controller.logger.BlockLogger;
 import com.zylex.myscoreparser.exceptions.LeagueParserException;
 import com.zylex.myscoreparser.model.Game;
-import com.zylex.myscoreparser.repository.GameRepository;
+import com.zylex.myscoreparser.controller.GameRepository;
 import com.zylex.myscoreparser.service.DriverManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -33,7 +33,10 @@ public class CallableSeasonParser implements Callable<List<Game>> {
 
     private GameRepository gameRepository;
 
-    CallableSeasonParser(DriverManager driverManager, GameRepository gameRepository, String leagueLink) {
+    private BlockLogger logger;
+
+    CallableSeasonParser(BlockLogger logger, DriverManager driverManager, GameRepository gameRepository, String leagueLink) {
+        this.logger = logger;
         this.driverManager = driverManager;
         this.gameRepository = gameRepository;
         this.leagueLink = leagueLink;
@@ -44,9 +47,7 @@ public class CallableSeasonParser implements Callable<List<Game>> {
         try {
             driver = driverManager.getDriver();
             wait = new WebDriverWait(driver, 10);
-            List<Game> games = processLeagueParsing(leagueLink);
-            ConsoleLogger.logSeason(games.size());
-            return games;
+            return processLeagueParsing(leagueLink);
         } catch (InterruptedException e) {
             throw new LeagueParserException(e.getMessage(), e);
         } finally {
@@ -71,6 +72,8 @@ public class CallableSeasonParser implements Callable<List<Game>> {
         String league = document.select("div.teamHeader__name").first().text();
         String season = document.select("div.teamHeader__text").first().text().replace("/", "");
         int seasonStartMonth = findSeasonStartMonth(gamesElements.last());
+        logger.logSeason(gamesElements.size());
+        int existInArchive = 0;
         for (Element gameElement : gamesElements) {
             String seasonStartYear = season.substring(0, 4);
             LocalDateTime gameDateTime = processDate(seasonStartYear, seasonStartMonth, gameElement);
@@ -81,15 +84,13 @@ public class CallableSeasonParser implements Callable<List<Game>> {
             int secondBalls = Integer.parseInt(scores[1]);
             String link = gameElement.id().replace("g_1_", "");
             Game game = new Game(country, league, season, gameDateTime, firstCommand, secondCommand, firstBalls, secondBalls, link);
-
-            ConsoleLogger.blockGames.incrementAndGet();
             if (gameRepository.getArchiveGames().contains(game)) {
-                gameRepository.getArchiveGames().get(gameRepository.getArchiveGames().indexOf(game)).setLink(game.getLink());
-                ConsoleLogger.blockGamesArchiveExist.incrementAndGet();
+                existInArchive++;
                 continue;
             }
             games.add(game);
         }
+        logger.addBlockGamesArchiveExist(existInArchive);
         return games;
     }
 

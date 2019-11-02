@@ -1,4 +1,4 @@
-package com.zylex.myscoreparser.service.parser.gamestrategy;
+package com.zylex.myscoreparser.service.parser.parsing_strategy;
 
 public enum ParserType {
     COEFFICIENTS("coefficients"),

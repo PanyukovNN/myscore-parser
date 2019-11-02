@@ -1,6 +1,6 @@
-package com.zylex.myscoreparser.service.parser.gamestrategy;
+package com.zylex.myscoreparser.service.parser.parsing_strategy;
 
-import com.zylex.myscoreparser.controller.ConsoleLogger;
+import com.zylex.myscoreparser.controller.logger.BlockLogger;
 import com.zylex.myscoreparser.exceptions.CoefficientParserException;
 import com.zylex.myscoreparser.model.Game;
 import com.zylex.myscoreparser.model.StatisticsValue;
@@ -30,16 +30,19 @@ public class CallableStatisticsParser implements Callable<List<Game>> {
 
     private int playOffGames = 0;
 
-    private int noStatisticsGames = 0;
+    private int noDataGames = 0;
 
     private DriverManager driverManager;
 
     private List<Game> archiveGames;
 
-    public CallableStatisticsParser(DriverManager driverManager, List<Game> archiveGames, List<Game> games) {
-        this.games = games;
-        this.archiveGames = archiveGames;
+    private BlockLogger logger;
+
+    public CallableStatisticsParser(BlockLogger logger, DriverManager driverManager, List<Game> archiveGames, List<Game> games) {
+        this.logger = logger;
         this.driverManager = driverManager;
+        this.archiveGames = archiveGames;
+        this.games = games;
     }
 
     public List<Game> call() {
@@ -52,14 +55,14 @@ public class CallableStatisticsParser implements Callable<List<Game>> {
             throw new CoefficientParserException(e.getMessage(), e);
         } finally {
             driverManager.addDriverToQueue(driver);
-            //TODO
-            ConsoleLogger.addPlayOffAndNoCoefGames(playOffGames, noStatisticsGames);
+            logger.setPlayOffGames(playOffGames);
+            logger.setNoDataGames(noDataGames);
         }
     }
 
     private void processStatisticParsing() {
         for (Game game : games) {
-            ConsoleLogger.logGame();
+            logger.logGame();
             driver.navigate().to(String.format("https://www.myscore.ru/match/%s/#match-statistics;0", game.getLink()));
             if (!statisticsTableExists()) {
                 continue;
@@ -77,7 +80,7 @@ public class CallableStatisticsParser implements Callable<List<Game>> {
         try {
             wait.until(ExpectedConditions.presenceOfElementLocated(By.className("statBox")));
         } catch (TimeoutException | NoSuchElementException ignore) {
-            noStatisticsGames++;
+            noDataGames++;
             return false;
         }
         return true;
