@@ -3,6 +3,7 @@ package com.zylex.myscoreparser;
 import com.zylex.myscoreparser.controller.ArchiveSaver;
 import com.zylex.myscoreparser.controller.GameRepository;
 import com.zylex.myscoreparser.controller.LeagueRepository;
+import com.zylex.myscoreparser.controller.logger.ParserLogger;
 import com.zylex.myscoreparser.service.DriverManager;
 import com.zylex.myscoreparser.service.parser.ParseProcessor;
 import com.zylex.myscoreparser.service.parser.parsing_strategy.ParserType;

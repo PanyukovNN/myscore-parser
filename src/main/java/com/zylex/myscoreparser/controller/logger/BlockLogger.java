@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class BlockLogger extends ConsoleLogger {
 
+    private static int blockNumber = 0;
+
     private AtomicLong blockStartTime = new AtomicLong(System.currentTimeMillis());
 
     private AtomicInteger processedGames = new AtomicInteger(0);
@@ -41,12 +43,12 @@ public class BlockLogger extends ConsoleLogger {
     public synchronized void startLogMessage(LogType type, Integer arg) {
         if (type == LogType.ARCHIVES) {
             blockArchives.set(arg);
-            writeInLine("\nProcessing block №%d archives: ...");
+            writeInLine(String.format("\nProcessing block №%d archives: ...", blockNumber));
         } else if (type == LogType.SEASONS) {
             blocSeasons.set(arg);
-            writeInLine("\nProcessing block №%d seasons: ...");
+            writeInLine(String.format("\nProcessing block №%d seasons: ...", blockNumber));
         } else if (type == LogType.GAMES) {
-            writeInLine("\nProcessing block №%d data: ...");
+            writeInLine(String.format("\nProcessing block №%d games data: ...", blockNumber));
         }
     }
 
@@ -69,7 +71,7 @@ public class BlockLogger extends ConsoleLogger {
     }
 
     public synchronized void logGame() {
-        String output = String.format("Processing block №%d data: %d/%d (%s%%)",
+        String output = String.format("Processing block №%d games data: %d/%d (%s%%)",
                 blockNumber,
                 processedGames.incrementAndGet() + blockGamesArchiveExist.get(),
                 blockGames.get(),

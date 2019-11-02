@@ -2,11 +2,10 @@ package com.zylex.myscoreparser.controller.logger;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class ConsoleLogger {
-
-    int blockNumber = 1;
 
     final AtomicLong programStartTime = new AtomicLong(System.currentTimeMillis());
 
@@ -18,17 +17,16 @@ public abstract class ConsoleLogger {
         System.out.print(message);
     }
 
-    String computeTime(long startTime) {
-        long endTime = System.currentTimeMillis();
-        long seconds = (endTime - startTime) / 1000;
-        long minutes = seconds / 60;
-        long houres = 0;
-        if (minutes > 60) {
-            houres = minutes / 60;
-            minutes = minutes % 60;
+    public String computeTime(long startTime) {
+        long millis = System.currentTimeMillis() - startTime;
+        String time = String.format("%02d min. %02d sec.",
+                TimeUnit.MILLISECONDS.toMinutes(millis) % TimeUnit.HOURS.toMinutes(1),
+                TimeUnit.MILLISECONDS.toSeconds(millis) % TimeUnit.MINUTES.toSeconds(1));
+        long hours = TimeUnit.MILLISECONDS.toHours(millis);
+        if (hours > 0) {
+            return String.format("%02d h. ", hours) + time;
+        } else {
+            return time;
         }
-        return (houres == 0 ? "" : houres + "h. ")
-                + minutes + " min. "
-                + seconds % 60 + " sec.";
     }
 }
