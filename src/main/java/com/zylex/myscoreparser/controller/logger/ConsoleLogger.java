@@ -17,7 +17,7 @@ public abstract class ConsoleLogger {
         System.out.print(message);
     }
 
-    public String computeTime(long startTime) {
+    String computeTime(long startTime) {
         long millis = System.currentTimeMillis() - startTime;
         String time = String.format("%02d min. %02d sec.",
                 TimeUnit.MILLISECONDS.toMinutes(millis) % TimeUnit.HOURS.toMinutes(1),

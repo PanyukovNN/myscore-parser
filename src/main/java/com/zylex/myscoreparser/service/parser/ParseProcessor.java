@@ -1,7 +1,6 @@
 package com.zylex.myscoreparser.service.parser;
 
 import com.zylex.myscoreparser.controller.logger.BlockLogger;
-import com.zylex.myscoreparser.controller.logger.ConsoleLogger;
 import com.zylex.myscoreparser.controller.logger.LogType;
 import com.zylex.myscoreparser.controller.logger.ParserLogger;
 import com.zylex.myscoreparser.exceptions.ParseProcessorException;

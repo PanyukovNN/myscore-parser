@@ -4,8 +4,8 @@ england/premier-league
 england/championship
 argentina/superliga
 belarus/vysshaya-liga
-belgium/jupiler-league
-bulgaria/parva-liga
+//belgium/jupiler-league
+//bulgaria/parva-liga
 
 //brazil/serie-a
 //brazil/serie-b

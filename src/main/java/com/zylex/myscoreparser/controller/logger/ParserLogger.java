@@ -10,18 +10,19 @@ public class ParserLogger extends ConsoleLogger {
 
     private AtomicInteger totalPlayOffGames = new AtomicInteger(0);
 
-    public void totalSummarizing() {
+    public synchronized void totalSummarizing() {
         writeInLine(String.format("\nTotal games: %d\n", totalGames.get()));
         writeInLine(String.format("Total play-off games: %d\n", totalPlayOffGames.get()));
         writeInLine(String.format("Total games with no data: %d\n", totalWithNoData.get()));
         writeInLine(String.format("Parsing completed in %s\n", computeTime(programStartTime.get())));
     }
 
-    void addTotalGames(int gamesNumer) {
-        totalGames.addAndGet(gamesNumer);
+    void addTotalGames(int gamesNumber) {
+        totalGames.addAndGet(gamesNumber);
     }
 
-    void addPlayOffGames(int playOffGames) {
+    synchronized void addPlayOffGames(int playOffGames) {
+//        System.out.println(playOffGames);
         totalPlayOffGames.addAndGet(playOffGames);
     }
 

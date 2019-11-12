@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class BlockLogger extends ConsoleLogger {
 
-    private static int blockNumber = 0;
+    private static int blockNumber = 1;
 
     private AtomicLong blockStartTime = new AtomicLong(System.currentTimeMillis());
 
@@ -97,11 +97,11 @@ public class BlockLogger extends ConsoleLogger {
 
     public void setPlayOffGames(int playOffGames) {
         parserLogger.addPlayOffGames(playOffGames);
-        blockPlayOffGames.set(playOffGames);
+        blockPlayOffGames.addAndGet(playOffGames);
     }
 
     public void setNoDataGames(int noDataGames) {
         parserLogger.addNoDataGames(noDataGames);
-        blockNoDataGames.set(noDataGames);
+        blockNoDataGames.addAndGet(noDataGames);
     }
 }
