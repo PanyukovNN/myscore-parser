@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+@SuppressWarnings("WeakerAccess")
 public abstract class ConsoleLogger {
 
     final AtomicLong programStartTime = new AtomicLong(System.currentTimeMillis());
