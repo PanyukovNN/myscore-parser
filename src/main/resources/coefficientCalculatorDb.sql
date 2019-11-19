@@ -1,28 +1,47 @@
 DROP TABLE IF EXISTS game, coefficient CASCADE;
 
-CREATE TABLE game (
+CREATE TABLE country (
     id             SERIAL NOT NULL PRIMARY KEY,
-    country        VARCHAR(50) NOT NULL,
-    leagueName     VARCHAR(50) NOT NULL,
-    season         VARCHAR(50) NOT NULL,
-    gameDate       TIMESTAMP NOT NULL,
-    firstCommand   VARCHAR(50) NOT NULL,
-    secondCommand  VARCHAR(50) NOT NULL,
-    firstBalls     INT NOT NULL,
-    secondBalls    INT NOT NULL,
-    coefHref       VARCHAR(50),
-    coefficient_id INT UNIQUE NOT NULL
+    country_name   VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE coefficient (
-    id        SERIAL NOT NULL PRIMARY KEY,
-    game_id   INT REFERENCES game(id) ON DELETE CASCADE,
-    bookmaker VARCHAR(50),
-    firstWin  VARCHAR(50) DEFAULT '-',
-    tie       VARCHAR(50) DEFAULT '-',
-    secondWin VARCHAR(50) DEFAULT '-',
-    max1x2    VARCHAR(50) DEFAULT '-',
-    min1x2    VARCHAR(50) DEFAULT '-',
-    dch1X     VARCHAR(50) DEFAULT '-',
-    dchx2     VARCHAR(50) DEFAULT '-'
+CREATE TABLE league (
+    id                  SERIAL NOT NULL PRIMARY KEY,
+    league_name         VARCHAR(100) NOT NULL,
+    country_id          INT REFERENCES country(id) ON DELETE CASCADE,
+    avg_home_goal       DECIMAL,
+    avg_away_goal       DECIMAL,
+    current_season_id   INT,
+    previous_season_id  INT
+);
+
+CREATE TABLE team (
+    id              SERIAL NOT NULL PRIMARY KEY,
+    league_id       INT REFERENCES league(id) ON DELETE CASCADE,
+    name            VARCHAR(100),
+    avg_home_goal   DECIMAL,
+    avg_away_goal   DECIMAL,
+    avg_home_GC     DECIMAL,
+    avg_away_GC     DECIMAL
+);
+
+CREATE TABLE match (
+    id              SERIAL NOT NULL PRIMARY KEY,
+    date            TIMESTAMP NOT NULL,
+    league_id       INT REFERENCES league(id) ON DELETE CASCADE,
+    season_id       INT REFERENCES season(id) ON DELETE CASCADE,
+    home_team_id    INT REFERENCES team(id) ON DELETE CASCADE,
+    away_team_id    INT REFERENCES team(id) ON DELETE CASCADE,
+    home_goal       INT NOT NULL,
+    away_goal       INT NOT NULL,
+    first_win       INT,
+    tie             INT,
+    second_win      INT
+);
+
+CREATE TABLE season (
+    id          SERIAL NOT NULL PRIMARY KEY,
+    year_from   INT NOT NULL,
+    year_to     INT NOt NULL,
+    league_id   INT REFERENCES league(id) ON DELETE CASCADE
 );
