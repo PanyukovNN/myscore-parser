@@ -75,6 +75,7 @@ public class CallableCoefficientParser implements Callable<List<Game>> {
 
     private boolean coefficientTableExists() {
         try {
+            //TODO remove sleep
             Thread.sleep(1200);
             if (!driver.getCurrentUrl().contains("full-time")) {
                 throw new TimeoutException();

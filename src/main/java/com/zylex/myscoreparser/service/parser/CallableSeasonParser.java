@@ -10,13 +10,16 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.*;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 public class CallableSeasonParser implements Callable<List<Game>> {
@@ -41,6 +44,24 @@ public class CallableSeasonParser implements Callable<List<Game>> {
         this.gameRepository = gameRepository;
         this.leagueLink = leagueLink;
 
+    }
+
+    //TODO move to additional class
+    private static List<LeagueRename> renameList = new ArrayList<>();
+
+    static {
+        try {
+            File file = new File("results/renaming.csv");
+            List<String> renameLines = Files.readAllLines(file.toPath());
+            for (String line : renameLines) {
+                String country = line.split(";")[0];
+                String oldLeagueName = line.split(" -> ")[0].split(";")[1];
+                String newLeagueName = line.split(" -> ")[1].split(";")[1];
+                renameList.add(new LeagueRename(country, oldLeagueName, newLeagueName));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public List<Game> call() {
@@ -70,6 +91,7 @@ public class CallableSeasonParser implements Callable<List<Game>> {
         Elements gamesElements = document.select("div.event__match");
         String country = document.select("span.event__title--type").first().text();
         String league = document.select("div.teamHeader__name").first().text();
+        league = leagueRename(country, league);
         String season = document.select("div.teamHeader__text").first().text().replace("/", "");
         int seasonStartMonth = findSeasonStartMonth(gamesElements.last());
         logger.logSeason(gamesElements.size());
@@ -92,6 +114,14 @@ public class CallableSeasonParser implements Callable<List<Game>> {
         }
         logger.addBlockGamesArchiveExist(existInArchive);
         return games;
+    }
+
+    private String leagueRename(String country, String league) {
+        //TODO make additional class
+        Optional<LeagueRename> leagueRename = renameList.stream().filter(item -> item.country.equals(country) && item.oldName.equals(league)).findFirst();
+        return leagueRename.isPresent()
+                ? leagueRename.get().newName
+                : league;
     }
 
     private void showMore() {
@@ -120,5 +150,20 @@ public class CallableSeasonParser implements Callable<List<Game>> {
             dateTime = dateTime.plusYears(1);
         }
         return dateTime;
+    }
+
+    static class LeagueRename {
+
+        private String country;
+
+        private String oldName;
+
+        private String newName;
+
+        public LeagueRename(String country, String oldName, String newName) {
+            this.country = country;
+            this.oldName = oldName;
+            this.newName = newName;
+        }
     }
 }

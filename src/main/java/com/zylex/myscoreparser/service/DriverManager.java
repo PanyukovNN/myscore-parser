@@ -26,18 +26,22 @@ public class DriverManager {
     }
 
     public void initiateDrivers() {
-        System.setProperty("webdriver.chrome.silentOutput", "true");
-        Logger.getLogger("org.openqa.selenium").setLevel(Level.OFF);
-        WebDriverManager.chromedriver().version("77.0.3865.40").setup();
-        logger.startLogMessage(LogType.DRIVERS, threads);
-        for (int i = 0; i < threads; i++) {
-            ChromeOptions options = new ChromeOptions();
-            options.addArguments("--window-size=1200,600");
-            options.addArguments("--headless");
-            WebDriver driver = new ChromeDriver(options);
-            driver.manage().timeouts().pageLoadTimeout(600, TimeUnit.SECONDS);
-            drivers.add(driver);
-            logger.logDriver();
+        try {
+            System.setProperty("webdriver.chrome.silentOutput", "true");
+            Logger.getLogger("org.openqa.selenium").setLevel(Level.OFF);
+            WebDriverManager.chromedriver().setup();
+            logger.startLogMessage(LogType.DRIVERS, threads);
+            for (int i = 0; i < threads; i++) {
+                ChromeOptions options = new ChromeOptions();
+                options.addArguments("--window-size=1200,600");
+                options.addArguments("--headless");
+                WebDriver driver = new ChromeDriver(options);
+                driver.manage().timeouts().pageLoadTimeout(600, TimeUnit.SECONDS);
+                drivers.add(driver);
+                logger.logDriver();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
