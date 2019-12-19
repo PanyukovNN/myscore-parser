@@ -6,7 +6,6 @@ argentina/superliga
 belarus/vysshaya-liga
 //belgium/jupiler-league
 //bulgaria/parva-liga
-
 //brazil/serie-a
 //brazil/serie-b
 //hungary/otp-bank-liga
@@ -15,7 +14,6 @@ belarus/vysshaya-liga
 //germany/2-bundesliga
 //greece/super-league
 //denmark/superliga
-
 //egypt/premier-league
 //israel/ligat-ha-al
 //ireland/premier-division
@@ -24,7 +22,6 @@ belarus/vysshaya-liga
 //spain/laliga2
 //italy/serie-a
 //italy/serie-b
-
 //kazakhstan/premier-league
 //cyprus/first-division
 //china/super-league
@@ -35,7 +32,6 @@ belarus/vysshaya-liga
 //netherlands/eredivisie
 //netherlands/eerste-divisie
 //norway/eliteserien
-
 //paraguay/primera-division
 //peru/liga-1
 //poland/ekstraklasa
@@ -46,7 +42,6 @@ belarus/vysshaya-liga
 //romania/liga-1
 //serbia/super-liga
 //slovakia/fortuna-liga
-
 //slovenia/prva-liga
 //usa/mls
 //turkey/super-lig
@@ -57,7 +52,6 @@ belarus/vysshaya-liga
 //france/ligue-2
 //croatia/1-hnl
 //czech-republic/1-liga
-
 //chile/primera-division
 //switzerland/super-league
 //sweden/allsvenskan

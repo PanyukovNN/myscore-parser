@@ -50,9 +50,9 @@ public class ArchiveSaver {
     private List<Game> sortGames(List<Game> games) {
         return games.stream()
                 .sorted(Comparator.comparing(Game::getCountry)
-                        .thenComparing(Game::getLeagueName)
+                        .thenComparing(Game::getLeague)
                         .thenComparing(Game::getSeason)
-                        .thenComparing(Game::getGameDate)
+                        .thenComparing(Game::getDateTime)
                 ).collect(Collectors.toList());
     }
 
@@ -73,11 +73,11 @@ public class ArchiveSaver {
             }
             StringBuilder line = new StringBuilder(String.format(GAME_BODY_FORMAT,
                     game.getCountry(),
-                    game.getLeagueName(),
+                    game.getLeague(),
                     game.getSeason(),
-                    DATE_FORMATTER.format(game.getGameDate()),
-                    game.getFirstCommand(),
-                    game.getSecondCommand(),
+                    DATE_FORMATTER.format(game.getDateTime()),
+                    game.getFirstTeam(),
+                    game.getSecondTeam(),
                     game.getFirstBalls(),
                     game.getSecondBalls(),
                     game.getLink()));

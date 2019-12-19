@@ -7,15 +7,15 @@ public class Game {
 
     private String country;
 
-    private String leagueName;
+    private String league;
 
     private String season;
 
-    private LocalDateTime gameDate;
+    private LocalDateTime dateTime;
 
-    private String firstCommand;
+    private String firstTeam;
 
-    private String secondCommand;
+    private String secondTeam;
 
     private int firstBalls;
 
@@ -27,13 +27,13 @@ public class Game {
 
     private Map<String, StatisticsValue> statisticsItems = new HashMap<>();
 
-    public Game(String country, String leagueName, String season, LocalDateTime gameDate, String firstCommand, String secondCommand, int firstBalls, int secondBalls, String link) {
+    public Game(String country, String league, String season, LocalDateTime dateTime, String firstTeam, String secondTeam, int firstBalls, int secondBalls, String link) {
         this.country = country;
-        this.leagueName = leagueName;
+        this.league = league;
         this.season = season;
-        this.gameDate = gameDate;
-        this.firstCommand = firstCommand;
-        this.secondCommand = secondCommand;
+        this.dateTime = dateTime;
+        this.firstTeam = firstTeam;
+        this.secondTeam = secondTeam;
         this.firstBalls = firstBalls;
         this.secondBalls = secondBalls;
         this.link = link;
@@ -43,24 +43,24 @@ public class Game {
         return country;
     }
 
-    public String getLeagueName() {
-        return leagueName;
+    public String getLeague() {
+        return league;
     }
 
     public String getSeason() {
         return season;
     }
 
-    public LocalDateTime getGameDate() {
-        return gameDate;
+    public LocalDateTime getDateTime() {
+        return dateTime;
     }
 
-    public String getFirstCommand() {
-        return firstCommand;
+    public String getFirstTeam() {
+        return firstTeam;
     }
 
-    public String getSecondCommand() {
-        return secondCommand;
+    public String getSecondTeam() {
+        return secondTeam;
     }
 
     public int getFirstBalls() {
@@ -93,27 +93,27 @@ public class Game {
         if (o == null || getClass() != o.getClass()) return false;
         Game game = (Game) o;
         return country.equals(game.country) &&
-                leagueName.equals(game.leagueName) &&
+                league.equals(game.league) &&
                 season.equals(game.season) &&
-                gameDate.equals(game.gameDate) &&
-                firstCommand.equals(game.firstCommand) &&
-                secondCommand.equals(game.secondCommand);
+                dateTime.equals(game.dateTime) &&
+                firstTeam.equals(game.firstTeam) &&
+                secondTeam.equals(game.secondTeam);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(country, leagueName, season, gameDate, firstCommand, secondCommand);
+        return Objects.hash(country, league, season, dateTime, firstTeam, secondTeam);
     }
 
     @Override
     public String toString() {
         return "Game{" +
                 "country='" + country + '\'' +
-                ", leagueName='" + leagueName + '\'' +
+                ", league='" + league + '\'' +
                 ", season='" + season + '\'' +
-                ", gameDate=" + gameDate +
-                ", firstCommand='" + firstCommand + '\'' +
-                ", secondCommand='" + secondCommand + '\'' +
+                ", dateTime=" + dateTime +
+                ", firstTeam='" + firstTeam + '\'' +
+                ", secondTeam='" + secondTeam + '\'' +
                 ", firstBalls=" + firstBalls +
                 ", secondBalls=" + secondBalls +
                 ", link='" + link + '\'' +
