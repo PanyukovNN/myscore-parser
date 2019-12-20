@@ -160,7 +160,7 @@ public class CallableSeasonParser implements Callable<List<Game>> {
 
         private String newName;
 
-        public LeagueRename(String country, String oldName, String newName) {
+        LeagueRename(String country, String oldName, String newName) {
             this.country = country;
             this.oldName = oldName;
             this.newName = newName;

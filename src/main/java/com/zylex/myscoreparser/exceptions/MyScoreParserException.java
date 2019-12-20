@@ -1,15 +1,8 @@
 package com.zylex.myscoreparser.exceptions;
 
-public class MyScoreParserException extends RuntimeException {
+class MyScoreParserException extends RuntimeException {
 
-    public MyScoreParserException() {
-    }
-
-    public MyScoreParserException(String message) {
-        super(message);
-    }
-
-    public MyScoreParserException(String message, Throwable cause) {
+    MyScoreParserException(String message, Throwable cause) {
         super(message, cause);
     }
 }

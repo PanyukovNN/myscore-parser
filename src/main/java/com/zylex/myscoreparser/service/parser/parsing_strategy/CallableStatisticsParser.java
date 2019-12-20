@@ -1,7 +1,6 @@
 package com.zylex.myscoreparser.service.parser.parsing_strategy;
 
 import com.zylex.myscoreparser.controller.logger.BlockLogger;
-import com.zylex.myscoreparser.exceptions.CoefficientParserException;
 import com.zylex.myscoreparser.exceptions.StatisticsParserException;
 import com.zylex.myscoreparser.model.Game;
 import com.zylex.myscoreparser.model.StatisticsValue;
