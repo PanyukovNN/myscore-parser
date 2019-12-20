@@ -1,7 +1,7 @@
 package com.zylex.myscoreparser.service.parser;
 
 import com.zylex.myscoreparser.controller.logger.BlockLogger;
-import com.zylex.myscoreparser.exceptions.LeagueParserException;
+import com.zylex.myscoreparser.exceptions.SeasonParserException;
 import com.zylex.myscoreparser.model.Game;
 import com.zylex.myscoreparser.controller.GameRepository;
 import com.zylex.myscoreparser.service.DriverManager;
@@ -70,7 +70,7 @@ public class CallableSeasonParser implements Callable<List<Game>> {
             wait = new WebDriverWait(driver, 10);
             return processLeagueParsing(leagueLink);
         } catch (InterruptedException e) {
-            throw new LeagueParserException(e.getMessage(), e);
+            throw new SeasonParserException(e.getMessage(), e);
         } finally {
             driverManager.addDriverToQueue(driver);
         }

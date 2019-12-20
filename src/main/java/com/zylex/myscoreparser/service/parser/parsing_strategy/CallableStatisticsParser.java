@@ -2,6 +2,7 @@ package com.zylex.myscoreparser.service.parser.parsing_strategy;
 
 import com.zylex.myscoreparser.controller.logger.BlockLogger;
 import com.zylex.myscoreparser.exceptions.CoefficientParserException;
+import com.zylex.myscoreparser.exceptions.StatisticsParserException;
 import com.zylex.myscoreparser.model.Game;
 import com.zylex.myscoreparser.model.StatisticsValue;
 import com.zylex.myscoreparser.service.DriverManager;
@@ -52,7 +53,7 @@ public class CallableStatisticsParser implements Callable<List<Game>> {
             processStatisticParsing();
             return games;
         } catch (InterruptedException e) {
-            throw new CoefficientParserException(e.getMessage(), e);
+            throw new StatisticsParserException(e.getMessage(), e);
         } finally {
             driverManager.addDriverToQueue(driver);
             logger.setPlayOffGames(playOffGames);
