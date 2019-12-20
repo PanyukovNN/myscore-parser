@@ -1,6 +1,6 @@
 package com.zylex.myscoreparser.controller;
 
-import com.zylex.myscoreparser.exceptions.RepositoryException;
+import com.zylex.myscoreparser.exceptions.LeagueRepositoryException;
 import com.zylex.myscoreparser.service.DriverManager;
 
 import java.io.BufferedReader;
@@ -25,7 +25,7 @@ public class LeagueRepository {
             }
             return getDiscreteLeagueList(threads, leagueLinks);
         } catch (IOException e) {
-            throw new RepositoryException(e.getMessage(), e);
+            throw new LeagueRepositoryException(e.getMessage(), e);
         }
     }
 

@@ -1,6 +1,6 @@
 package com.zylex.myscoreparser.controller;
 
-import com.zylex.myscoreparser.exceptions.SaverParserException;
+import com.zylex.myscoreparser.exceptions.ArchiveSaverException;
 import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Game;
 import com.zylex.myscoreparser.model.StatisticsValue;
@@ -43,7 +43,7 @@ public class ArchiveSaver {
                 writeToFile(archiveGames, writer);
             }
         } catch (IOException e) {
-            throw new SaverParserException(e.getMessage(), e);
+            throw new ArchiveSaverException(e.getMessage(), e);
         }
     }
 

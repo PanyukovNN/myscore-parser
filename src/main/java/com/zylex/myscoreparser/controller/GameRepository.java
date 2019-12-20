@@ -1,6 +1,6 @@
 package com.zylex.myscoreparser.controller;
 
-import com.zylex.myscoreparser.exceptions.ArchiveException;
+import com.zylex.myscoreparser.exceptions.GameRepositoryException;
 import com.zylex.myscoreparser.model.Coefficient;
 import com.zylex.myscoreparser.model.Game;
 import com.zylex.myscoreparser.model.StatisticsValue;
@@ -53,7 +53,7 @@ public class GameRepository {
                 archiveGames.add(game);
             }
         } catch (IOException e) {
-            throw new ArchiveException(e.getMessage(), e);
+            throw new GameRepositoryException(e.getMessage(), e);
         }
     }
 
